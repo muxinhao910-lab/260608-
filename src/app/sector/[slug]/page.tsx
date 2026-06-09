@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { RobotAnalysisHoverHero } from "@/components/sector/RobotAnalysisHoverHero";
 import { RobotRadarModel } from "@/components/RobotRadarModel";
 import {
   type CompanyRecord,
@@ -86,20 +87,7 @@ export default function SectorPage() {
       <section className="px-5 py-8 md:px-10">
         <TopBar />
         <div className="mx-auto max-w-[1500px]">
-          <div className="grid gap-10 border-b border-white/20 pb-12 lg:grid-cols-[.8fr_1.2fr]" data-review-id="robot-analysis-hero">
-            <div>
-              <p className="font-mono text-xs uppercase tracking-normal text-[#f36b21]">{sector.number} / {sector.slug}</p>
-              <div className="mt-5 h-1 w-full bg-[#f36b21]" />
-            </div>
-            <div>
-              <h1 className="font-serif text-[14vw] font-black leading-[.82] tracking-normal md:text-[108px]">
-                机器人产业链雷达
-              </h1>
-              <p className="mt-8 max-w-3xl text-xl leading-relaxed text-white/78 md:text-2xl">
-                先用机器人 3D 模型建立直觉。默认是外表面公司占位；鼠标移入模型区域后切换到内部骨骼构造和核心零部件公司。
-              </p>
-            </div>
-          </div>
+          <RobotAnalysisHoverHero sector={sector} />
 
           <div className="mt-10 grid gap-6 xl:grid-cols-[1.08fr_.92fr]" data-review-id="robot-analysis-radar-stage">
             <RobotRadarModel companies={sectorCompanies} activeCode={activeCode} onSelect={setActiveCode} />
