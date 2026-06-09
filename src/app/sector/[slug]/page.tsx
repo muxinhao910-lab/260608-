@@ -101,7 +101,7 @@ export default function SectorPage() {
             </div>
           </div>
 
-          <div className="mt-10 grid gap-6 xl:grid-cols-[1.08fr_.92fr]" data-review-id="robot-analysis-radar-stage">
+          <div className="mt-10 grid items-start gap-6 xl:grid-cols-[1.08fr_.92fr]" data-review-id="robot-analysis-radar-stage">
             <RobotRadarModel companies={sectorCompanies} activeCode={activeCode} onSelect={setActiveCode} />
             {activeCompany ? <CompanyRadarPage company={activeCompany} infoCards={activeInfoCards} /> : null}
           </div>

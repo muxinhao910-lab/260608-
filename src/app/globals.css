@@ -350,6 +350,313 @@ body {
   }
 }
 
+.robot-image-radar {
+  --robot-x: 0;
+  --robot-y: 0;
+  --robot-hover: 0;
+  --robot-scroll: 0;
+  isolation: isolate;
+  border-radius: 0;
+  transform-style: preserve-3d;
+  contain: layout paint;
+}
+
+.robot-image-radar::before,
+.robot-image-radar::after,
+.robot-image-radar-bg,
+.robot-image-radar-grid,
+.robot-image-radar-scan {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.robot-image-radar::before {
+  z-index: 1;
+  background:
+    radial-gradient(circle at calc(50% + var(--robot-x) * 24%) calc(42% + var(--robot-y) * 18%), rgba(243, 107, 33, .28), transparent 34%),
+    radial-gradient(circle at 72% 22%, rgba(60, 160, 255, .16), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, .05), transparent 28%, rgba(255, 255, 255, .04));
+  opacity: calc(.58 + var(--robot-hover) * .22);
+  mix-blend-mode: screen;
+}
+
+.robot-image-radar::after {
+  z-index: 9;
+  border: 1px solid rgba(255, 255, 255, .08);
+  background: linear-gradient(116deg, transparent 20%, rgba(255, 255, 255, .14) 43%, rgba(243, 107, 33, .12) 49%, transparent 66%);
+  opacity: calc(var(--robot-hover) * .32 + var(--robot-scroll) * .14);
+  transform: translate3d(calc(var(--robot-x) * 38px), calc(var(--robot-y) * 22px), 0) rotate(3deg);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+.robot-image-radar-bg {
+  z-index: 0;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(243, 107, 33, .16), transparent 36%),
+    linear-gradient(135deg, rgba(255, 255, 255, .07) 0 1px, transparent 1px 19px),
+    #050505;
+  transform: translate3d(calc(var(--robot-x) * -18px), calc(var(--robot-y) * -12px), 0) scale(1.04);
+  will-change: transform;
+}
+
+.robot-image-radar-grid {
+  z-index: 2;
+  background:
+    linear-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .05) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at 50% 48%, black, transparent 72%);
+  opacity: .28;
+  transform: translate3d(calc(var(--robot-x) * -10px), calc(var(--robot-y) * -8px), 0);
+}
+
+.robot-image-radar-scan {
+  z-index: 8;
+  inset: -22%;
+  background: linear-gradient(96deg, transparent 38%, rgba(255, 255, 255, .2) 48%, rgba(243, 107, 33, .16) 52%, transparent 64%);
+  opacity: calc(.08 + var(--robot-hover) * .34);
+  transform: translate3d(calc((var(--robot-scroll) - .5) * 180px + var(--robot-x) * 32px), calc(var(--robot-y) * 20px), 0) rotate(7deg);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+.robot-image-radar-header,
+.robot-image-radar-footer {
+  position: absolute;
+  z-index: 12;
+  pointer-events: none;
+}
+
+.robot-image-radar-header {
+  left: 18px;
+  top: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  background: rgba(0, 0, 0, .48);
+  padding: 10px 12px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  text-transform: uppercase;
+  backdrop-filter: blur(18px);
+}
+
+.robot-image-radar-header p {
+  color: rgba(255, 255, 255, .52);
+  font-size: 10px;
+}
+
+.robot-image-radar-header strong {
+  color: #f36b21;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.robot-image-radar-media {
+  position: absolute;
+  inset: 56px 18px 96px;
+  z-index: 5;
+  transform: perspective(1400px) rotateX(calc(var(--robot-y) * -3.8deg)) rotateY(calc(var(--robot-x) * 5.2deg)) translate3d(calc(var(--robot-x) * 22px), calc(var(--robot-y) * 14px), 0) scale(calc(1 + var(--robot-hover) * .018 + var(--robot-scroll) * .018));
+  transform-origin: center;
+  transition: filter .3s ease;
+  will-change: transform;
+}
+
+.robot-image-radar:hover .robot-image-radar-media {
+  filter: drop-shadow(0 0 28px rgba(243, 107, 33, .16));
+}
+
+.robot-radar-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  user-select: none;
+  opacity: 0;
+  transform: scale(.985);
+  transition: opacity .55s ease, clip-path .7s cubic-bezier(.2, .8, .2, 1), transform .55s ease;
+  will-change: opacity, clip-path, transform;
+}
+
+.robot-radar-image-exterior {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+}
+
+.robot-radar-image-interior {
+  clip-path: inset(0 100% 0 0);
+}
+
+.robot-image-radar[data-view="interior"] .robot-radar-image-exterior {
+  opacity: .18;
+  transform: scale(1.012);
+}
+
+.robot-image-radar[data-view="interior"] .robot-radar-image-interior {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+  transform: scale(1);
+}
+
+.robot-image-radar-hotspots {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+}
+
+.robot-radar-hotspot {
+  position: absolute;
+  display: grid;
+  grid-template-columns: 14px minmax(110px, 190px);
+  gap: 8px;
+  align-items: start;
+  border: 0;
+  color: #ffffff;
+  background: transparent;
+  text-align: left;
+  transform: translate3d(-7px, -7px, 0);
+  transition: transform .28s ease, opacity .28s ease;
+  will-change: transform;
+}
+
+.robot-radar-hotspot:hover,
+.robot-radar-hotspot:focus-visible,
+.robot-radar-hotspot.is-active {
+  transform: translate3d(-7px, -9px, 0) scale(1.035);
+  outline: 0;
+}
+
+.robot-radar-hotspot-dot {
+  position: relative;
+  z-index: 2;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #f36b21;
+  border-radius: 999px;
+  background: #050505;
+  box-shadow: 0 0 0 4px rgba(243, 107, 33, .12), 0 0 22px rgba(243, 107, 33, .54);
+}
+
+.robot-radar-hotspot-line {
+  position: absolute;
+  left: 6px;
+  top: 7px;
+  width: 72px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(243, 107, 33, .95), rgba(255, 255, 255, .08));
+  transform-origin: left center;
+  opacity: .58;
+}
+
+.robot-radar-hotspot-copy {
+  border: 1px solid rgba(255, 255, 255, .18);
+  background: rgba(0, 0, 0, .46);
+  padding: 8px 10px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, .24);
+  backdrop-filter: blur(16px);
+}
+
+.robot-radar-hotspot-copy strong {
+  display: block;
+  color: #f36b21;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.robot-radar-hotspot-copy small {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, .68);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.robot-radar-hotspot:hover .robot-radar-hotspot-copy,
+.robot-radar-hotspot:focus-visible .robot-radar-hotspot-copy,
+.robot-radar-hotspot.is-active .robot-radar-hotspot-copy {
+  border-color: rgba(243, 107, 33, .74);
+  background: rgba(16, 14, 12, .72);
+  box-shadow: 0 0 30px rgba(243, 107, 33, .22);
+}
+
+.robot-image-radar-footer {
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid rgba(255, 255, 255, .16);
+  padding-top: 14px;
+}
+
+.robot-image-radar-footer p {
+  max-width: 31ch;
+  color: rgba(255, 255, 255, .68);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.robot-image-radar-footer div p {
+  color: #f36b21;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.robot-image-radar-footer h3 {
+  margin-top: 4px;
+  font-size: clamp(28px, 3.8vw, 52px);
+  font-weight: 900;
+  line-height: .9;
+}
+
+@media (max-width: 768px) {
+  .robot-image-radar {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 0.72;
+    position: relative;
+  }
+
+  .robot-image-radar-media {
+    inset: 54px 8px 126px;
+    transform: none;
+  }
+
+  .robot-image-radar-hotspots {
+    display: none;
+  }
+
+  .robot-image-radar-footer {
+    display: block;
+  }
+
+  .robot-image-radar-footer > p {
+    margin-top: 8px;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .robot-image-radar::after,
+  .robot-image-radar-bg,
+  .robot-image-radar-grid,
+  .robot-image-radar-scan,
+  .robot-image-radar-media,
+  .robot-radar-image,
+  .robot-radar-hotspot {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 .robot-hover-radar {
   --radar-x: 0;
   --radar-y: 0;
