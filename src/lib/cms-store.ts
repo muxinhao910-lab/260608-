@@ -1,0 +1,294 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  credibilityRules as seedCredibilityRules,
+  robotCompanies,
+  sourceTypeLabels,
+  type ChainSegment,
+  type SourceType,
+  type ValidationStage
+} from "@/lib/radar-data";
+
+export type MarketType = "A股" | "港股" | "美股" | "ETF";
+
+export type SectorRecord = {
+  id: string;
+  order: number;
+  number: string;
+  title: string;
+  slug: string;
+  path: string;
+  summary: string;
+  status: "active" | "reserved";
+};
+
+export type CompanyRecord = {
+  id: string;
+  stockCode: string;
+  stockName: string;
+  marketType: MarketType;
+  sectorId: string;
+  oneLineLogic: string;
+  currentStage: ValidationStage;
+  chainPosition: string;
+  coreMetrics: string[];
+  marketFocus: string;
+  riskTips: string[];
+  relatedCompanies: string[];
+  chainSegment: ChainSegment;
+  latestInfoFlow: string[];
+  mapPoint: {
+    part: string;
+    x: number;
+    y: number;
+    z: number;
+    labelX: number;
+    labelY: number;
+  };
+  tracking: {
+    newCustomers: string;
+    newOrders: string;
+    robotRevenueShare: string;
+    grossMarginChange: string;
+    capacityExpansion: string;
+    enteredTopCustomerSupplyChain: "已进入" | "验证中" | "未确认";
+  };
+};
+
+export type InfoCardType = "客户" | "订单" | "收入占比" | "毛利率" | "产能" | "宏观" | "ETF" | "行业价格";
+
+export type InfoCardRecord = {
+  id: string;
+  companyId: string;
+  type: InfoCardType;
+  title: string;
+  body: string;
+  sourceName: string;
+  sourceUrl: string;
+  sourceType: SourceType;
+  credibilityScore: number;
+  credibilityNote: string;
+  publishedAt: string;
+};
+
+export type CredibilityRuleRecord = {
+  id: string;
+  sourceType: string;
+  baseScore: number;
+  bonusRule: string;
+  penaltyRule: string;
+};
+
+export type SiteData = {
+  home: {
+    title: string;
+    subtitle: string;
+    intro: string;
+  };
+  sectors: SectorRecord[];
+  companies: CompanyRecord[];
+  infoCards: InfoCardRecord[];
+  credibilityRules: CredibilityRuleRecord[];
+};
+
+const STORE_KEY = "chain-radar-cms-v1";
+const AUTH_KEY = "chain-radar-admin-auth";
+
+export const adminCredential = {
+  username: "admin",
+  password: "radar123"
+};
+
+const robotSectorId = "robotics";
+
+export const defaultSiteData: SiteData = {
+  home: {
+    title: "产业链投资研究雷达",
+    subtitle: "未来科技展览馆式产业链研究系统",
+    intro: "不以 K 线为核心，先看产业链位置、长期跟踪指标、信息来源和可信度。第一阶段聚焦机器人板块，后续接入光模块、半导体和 AI。"
+  },
+  sectors: [
+    {
+      id: "robotics",
+      order: 1,
+      number: "01",
+      title: "机器人板块",
+      slug: "robotics",
+      path: "/sector/robotics",
+      summary: "进入 3D 机器人产业链雷达，查看公司在机器人不同部位中的位置。",
+      status: "active"
+    },
+    {
+      id: "semiconductor",
+      order: 2,
+      number: "02",
+      title: "半导体板块",
+      slug: "semiconductor",
+      path: "/sector/semiconductor",
+      summary: "设备、材料、先进封装与国产替代链条，下一阶段接入。",
+      status: "reserved"
+    },
+    {
+      id: "ai",
+      order: 3,
+      number: "03",
+      title: "AI板块",
+      slug: "ai",
+      path: "/sector/ai",
+      summary: "算力、模型、应用与数据基础设施，后续扩展。",
+      status: "reserved"
+    },
+    {
+      id: "optical-module",
+      order: 4,
+      number: "04",
+      title: "光模块板块",
+      slug: "optical-module",
+      path: "/sector/optical-module",
+      summary: "光芯片、光器件、光模块、交换机链条，后续扩展为光通信研究雷达。",
+      status: "reserved"
+    }
+  ],
+  companies: robotCompanies.map((company) => ({
+    id: company.code,
+    stockCode: company.code,
+    stockName: company.name,
+    marketType: company.code.startsWith("6") || company.code.startsWith("0") ? "A股" : "A股",
+    sectorId: robotSectorId,
+    oneLineLogic: company.oneLineLogic,
+    currentStage: company.tracking.validationStage,
+    chainPosition: company.chainPosition,
+    coreMetrics: company.longTermMetrics,
+    marketFocus: company.marketFocus,
+    riskTips: company.riskTips,
+    relatedCompanies: robotCompanies.filter((peer) => peer.chainSegment === company.chainSegment && peer.code !== company.code).map((peer) => peer.name),
+    chainSegment: company.chainSegment,
+    latestInfoFlow: company.latestInfoFlow,
+    mapPoint: company.mapPoint,
+    tracking: {
+      newCustomers: company.tracking.newCustomers,
+      newOrders: company.tracking.newOrders,
+      robotRevenueShare: company.tracking.robotRevenueShare,
+      grossMarginChange: company.tracking.grossMarginChange,
+      capacityExpansion: company.tracking.capacityExpansion,
+      enteredTopCustomerSupplyChain: company.tracking.enteredTopCustomerSupplyChain
+    }
+  })),
+  infoCards: robotCompanies.flatMap((company) =>
+    company.sources.map((source, index) => ({
+      id: `${company.code}-${index + 1}`,
+      companyId: company.code,
+      type: index === 0 ? "宏观" : "客户",
+      title: `${company.shortName} 信息源 ${index + 1}`,
+      body: "第一版先使用官方信息入口和 mock tracking 字段。无法确认的新增客户、订单和收入占比不写成事实，等待公告、年报、季报、IR 或互动平台确认。",
+      sourceName: source.label,
+      sourceUrl: source.url,
+      sourceType: source.type,
+      credibilityScore: source.credibility,
+      credibilityNote: `${sourceTypeLabels[source.type]} 默认可信度区间内，后续接入真实内容后按披露粒度重新打分。`,
+      publishedAt: "2026-06-08"
+    }))
+  ),
+  credibilityRules: seedCredibilityRules.map((rule, index) => ({
+    id: `rule-${index + 1}`,
+    sourceType: rule.type,
+    baseScore: Number(rule.range.split("-")[0]),
+    bonusRule: "信息包含明确公司主体、业务口径、时间、数量或财务指标时加分。",
+    penaltyRule: "信息无法追溯原文、只来自二手转述、缺少时间或主体时扣分。"
+  }))
+};
+
+function cloneDefault(): SiteData {
+  return JSON.parse(JSON.stringify(defaultSiteData)) as SiteData;
+}
+
+export function getSiteData(): SiteData {
+  if (typeof window === "undefined") {
+    return cloneDefault();
+  }
+  if (!window.localStorage) {
+    return cloneDefault();
+  }
+  const raw = window.localStorage.getItem(STORE_KEY);
+  if (!raw) {
+    const seeded = cloneDefault();
+    window.localStorage.setItem(STORE_KEY, JSON.stringify(seeded));
+    return seeded;
+  }
+  try {
+    return JSON.parse(raw) as SiteData;
+  } catch {
+    const seeded = cloneDefault();
+    window.localStorage.setItem(STORE_KEY, JSON.stringify(seeded));
+    return seeded;
+  }
+}
+
+export function saveSiteData(data: SiteData) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  window.dispatchEvent(new CustomEvent("chain-radar-data-change"));
+}
+
+export function resetSiteData() {
+  saveSiteData(cloneDefault());
+}
+
+export function isAdminLoggedIn() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const local = window.localStorage?.getItem(AUTH_KEY) === "true";
+  const cookie = document.cookie.split(";").some((item) => item.trim() === `${AUTH_KEY}=true`);
+  return local || cookie;
+}
+
+export function setAdminLoggedIn(value: boolean) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  if (value) {
+    window.localStorage?.setItem(AUTH_KEY, "true");
+    document.cookie = `${AUTH_KEY}=true; path=/; max-age=86400; SameSite=Lax`;
+  } else {
+    window.localStorage?.removeItem(AUTH_KEY);
+    document.cookie = `${AUTH_KEY}=; path=/; max-age=0; SameSite=Lax`;
+  }
+}
+
+export function isValidUrl(value: string) {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+export function createId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+}
+
+export function useSiteDataStore() {
+  const [data, setData] = useState<SiteData>(() => getSiteData());
+
+  useEffect(() => {
+    const sync = () => setData(getSiteData());
+    window.addEventListener("storage", sync);
+    window.addEventListener("chain-radar-data-change", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("chain-radar-data-change", sync);
+    };
+  }, []);
+
+  function update(next: SiteData) {
+    saveSiteData(next);
+    setData(next);
+  }
+
+  return { data, update, reset: resetSiteData };
+}

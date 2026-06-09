@@ -1,0 +1,351 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8f4ec;
+  --foreground: #111111;
+  --orange: #f36b21;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+  scroll-behavior: auto;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Aptos", "Segoe UI", sans-serif;
+}
+
+::selection {
+  color: #ffffff;
+  background: var(--orange);
+}
+
+.noise-field {
+  background:
+    radial-gradient(circle at 16% 22%, rgba(243, 107, 33, .16), transparent 18%),
+    radial-gradient(circle at 86% 78%, rgba(17, 17, 17, .12), transparent 20%),
+    repeating-linear-gradient(112deg, rgba(17, 17, 17, .045) 0 1px, transparent 1px 9px);
+  mix-blend-mode: multiply;
+}
+
+.doodle-layer {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(17, 17, 17, .16) 0 2px, transparent 3px),
+    radial-gradient(circle at 74% 22%, rgba(17, 17, 17, .14) 0 1px, transparent 2px),
+    radial-gradient(circle at 28% 78%, rgba(17, 17, 17, .12) 0 2px, transparent 3px),
+    linear-gradient(135deg, transparent 0 48%, rgba(17, 17, 17, .08) 48% 50%, transparent 50% 100%);
+  background-size: 88px 88px, 56px 56px, 120px 120px, 240px 240px;
+}
+
+.scribble {
+  position: absolute;
+  display: block;
+  border: 3px solid currentColor;
+  opacity: .6;
+}
+
+.scribble-one {
+  left: 7vw;
+  top: 22vh;
+  width: 190px;
+  height: 78px;
+  border-radius: 52% 48% 57% 43%;
+  transform: rotate(-16deg);
+}
+
+.scribble-two {
+  right: 8vw;
+  bottom: 15vh;
+  width: 160px;
+  height: 160px;
+  border-radius: 44% 56% 47% 53%;
+  border-color: var(--orange);
+  transform: rotate(22deg);
+}
+
+.scribble-three {
+  left: 40vw;
+  bottom: 11vh;
+  width: 220px;
+  height: 4px;
+  border-width: 2px 0 0;
+  transform: rotate(-8deg);
+}
+
+.caption {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(520px, 100%);
+  padding: 1.25rem 0 0 1.25rem;
+}
+
+.caption-kicker {
+  margin: 0 0 .9rem;
+  color: var(--orange);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.caption h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 4.6vw, 72px);
+  font-weight: 900;
+  line-height: .88;
+  letter-spacing: 0;
+}
+
+.caption p:last-child {
+  max-width: 30rem;
+  margin: 1rem 0 0;
+  font-size: clamp(16px, 1.4vw, 20px);
+  line-height: 1.45;
+}
+
+.grid-card,
+.sector-button {
+  will-change: transform, opacity, background-color, color;
+}
+
+.hero-title,
+.orange-disc,
+.poster-block,
+.scribble,
+.caption {
+  will-change: transform, opacity;
+}
+
+@media (max-width: 768px) {
+  .caption {
+    top: -12vh;
+    padding-left: 0;
+  }
+
+  .card-stage {
+    transform: translateY(20vh);
+  }
+
+  .poster-block {
+    max-width: 88vw;
+  }
+}
+
+.admin-danger {
+  border: 1px solid rgba(255, 255, 255, .22);
+  padding: .75rem 1rem;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(255, 255, 255, .04);
+}
+
+.admin-danger:hover {
+  border-color: #f36b21;
+  color: #f36b21;
+}
+
+.route-countdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: #111111;
+  background: #f8f4ec;
+}
+
+.route-countdown-card {
+  position: relative;
+  width: min(920px, 88vw);
+  height: min(620px, 82vh);
+  overflow: hidden;
+  border: 4px solid #111111;
+  color: #111111;
+  background: #ffffff;
+  box-shadow: 18px 18px 0 #f36b21;
+}
+
+.route-countdown-texture {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(0, 0, 0, .12) 0 3px, transparent 4px),
+    repeating-linear-gradient(115deg, rgba(0, 0, 0, .06) 0 1px, transparent 1px 18px);
+}
+
+.route-countdown-meta {
+  position: absolute;
+  left: 32px;
+  top: 32px;
+  z-index: 2;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.route-countdown-copy {
+  position: absolute;
+  bottom: 32px;
+  left: 32px;
+  z-index: 2;
+  max-width: min(420px, 72vw);
+}
+
+.route-countdown-copy p {
+  margin: 0;
+  color: #f36b21;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+}
+
+.route-countdown-copy h2 {
+  margin: 8px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(38px, 6.5vw, 76px);
+  font-weight: 900;
+  line-height: .92;
+  letter-spacing: 0;
+}
+
+.route-countdown-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.route-sketch {
+  position: relative;
+  width: 288px;
+  height: 288px;
+  animation: route-sketch-wiggle 1.12s ease-in-out infinite;
+}
+
+.route-sketch-body {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 128px;
+  height: 176px;
+  border: 4px solid #111111;
+  border-radius: 42%;
+  background: #f36b21;
+  transform: translate(-50%, -50%);
+}
+
+.route-sketch-eye {
+  position: absolute;
+  top: 28%;
+  width: 20px;
+  height: 20px;
+  border: 4px solid #111111;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.route-sketch-eye-left {
+  left: 40%;
+}
+
+.route-sketch-eye-right {
+  right: 40%;
+}
+
+.route-sketch-mouth {
+  position: absolute;
+  left: 38%;
+  top: 52%;
+  width: 80px;
+  height: 32px;
+  border-bottom: 4px solid #111111;
+  border-radius: 0 0 999px 999px;
+}
+
+.route-sketch-arm {
+  position: absolute;
+  top: 44%;
+  width: 80px;
+  height: 4px;
+  background: #111111;
+}
+
+.route-sketch-arm-left {
+  left: 14%;
+  transform: rotate(-12deg);
+}
+
+.route-sketch-arm-right {
+  right: 14%;
+  transform: rotate(12deg);
+}
+
+.route-countdown-digit,
+.countdown-sequence {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(120px, 16vw, 180px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0;
+  text-shadow: 6px 6px 0 #f36b21;
+}
+
+.countdown-number {
+  position: absolute;
+  opacity: 0;
+  animation: countdown-number-pop 960ms ease-in-out infinite;
+}
+
+.countdown-number:nth-child(2) {
+  animation-delay: 320ms;
+}
+
+.countdown-number:nth-child(3) {
+  animation-delay: 640ms;
+}
+
+@keyframes countdown-number-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(26px) scale(.58) rotate(-8deg);
+  }
+
+  13%,
+  32% {
+    opacity: 1;
+    transform: translateY(0) scale(1.08) rotate(0deg);
+  }
+
+  46%,
+  100% {
+    opacity: 0;
+    transform: translateY(-18px) scale(.78) rotate(7deg);
+  }
+}
+
+@keyframes route-sketch-wiggle {
+  0%,
+  100% {
+    transform: rotate(-2deg) translateY(0);
+  }
+
+  50% {
+    transform: rotate(2deg) translateY(-5px);
+  }
+}
