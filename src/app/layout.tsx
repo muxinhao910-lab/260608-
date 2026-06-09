@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { DesignReviewOverlay } from "@/components/DesignReviewOverlay";
 import "./globals.css";
 
@@ -16,7 +17,9 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body>
         {children}
-        <DesignReviewOverlay />
+        <Suspense fallback={null}>
+          <DesignReviewOverlay />
+        </Suspense>
       </body>
     </html>
   );

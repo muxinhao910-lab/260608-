@@ -63,7 +63,7 @@ export default function SectorPage() {
 
   if (sector.id !== "robotics") {
     return (
-      <main className="min-h-screen bg-[#070707] px-5 py-8 text-white md:px-10">
+      <main className="min-h-screen bg-[#070707] px-5 py-8 text-white md:px-10" data-review-page={`sector-${sector.slug}`}>
         <TopBar />
         <section className="mx-auto grid min-h-[78vh] max-w-7xl place-items-center">
           <div className="w-full border-2 border-white/20 bg-white/[.06] p-6 shadow-[0_0_80px_rgba(243,107,33,.18)] md:p-10">
@@ -82,11 +82,11 @@ export default function SectorPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] text-white">
+    <main className="min-h-screen bg-[#050505] text-white" data-review-page="robot-analysis">
       <section className="px-5 py-8 md:px-10">
         <TopBar />
         <div className="mx-auto max-w-[1500px]">
-          <div className="grid gap-10 border-b border-white/20 pb-12 lg:grid-cols-[.8fr_1.2fr]">
+          <div className="grid gap-10 border-b border-white/20 pb-12 lg:grid-cols-[.8fr_1.2fr]" data-review-id="robot-analysis-hero">
             <div>
               <p className="font-mono text-xs uppercase tracking-normal text-[#f36b21]">{sector.number} / {sector.slug}</p>
               <div className="mt-5 h-1 w-full bg-[#f36b21]" />
@@ -101,12 +101,12 @@ export default function SectorPage() {
             </div>
           </div>
 
-          <div className="mt-10 grid gap-6 xl:grid-cols-[1.08fr_.92fr]">
+          <div className="mt-10 grid gap-6 xl:grid-cols-[1.08fr_.92fr]" data-review-id="robot-analysis-radar-stage">
             <RobotRadarModel companies={sectorCompanies} activeCode={activeCode} onSelect={setActiveCode} />
             {activeCompany ? <CompanyRadarPage company={activeCompany} infoCards={activeInfoCards} /> : null}
           </div>
 
-          <div className="mt-8 grid gap-6 xl:grid-cols-[.78fr_1.22fr]">
+          <div className="mt-8 grid gap-6 xl:grid-cols-[.78fr_1.22fr]" data-review-id="robot-company-list">
             <SearchPanel
               activeCode={activeCode}
               activeSegment={activeSegment}
@@ -120,7 +120,7 @@ export default function SectorPage() {
             <CategorySection groupedCompanies={groupedCompanies} setActiveCode={setActiveCode} />
           </div>
 
-          <section className="mt-8 grid gap-6 xl:grid-cols-[.85fr_1.15fr]">
+          <section className="mt-8 grid gap-6 xl:grid-cols-[.85fr_1.15fr]" data-review-id="robot-sector-cards">
             <InfoCard dark title="可信度评分规则" eyebrow="source scoring">
               <div className="grid gap-2">
                 {data.credibilityRules.map((rule) => (
@@ -156,7 +156,7 @@ function TopBar() {
 
 function CompanyRadarPage({ company, infoCards }: { company: CompanyRecord; infoCards: InfoCardRecord[] }) {
   return (
-    <section className="min-h-[760px] border-2 border-white/20 bg-white/[.06] p-5 shadow-[0_0_80px_rgba(243,107,33,.14)] backdrop-blur-xl md:p-6">
+    <section className="min-h-[760px] border-2 border-white/20 bg-white/[.06] p-5 shadow-[0_0_80px_rgba(243,107,33,.14)] backdrop-blur-xl md:p-6" data-review-id="robot-company-detail">
       <div className="flex flex-wrap items-start justify-between gap-5 border-b border-white/15 pb-5">
         <div>
           <p className="font-mono text-xs uppercase tracking-normal text-[#f36b21]">company radar page</p>

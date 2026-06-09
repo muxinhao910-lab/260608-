@@ -374,8 +374,8 @@ body {
   position: fixed;
   right: 18px;
   bottom: 68px;
-  z-index: 10002;
-  width: min(360px, calc(100vw - 36px));
+  z-index: 10005;
+  width: min(420px, calc(100vw - 36px));
   border: 1px solid rgba(255, 255, 255, .2);
   border-radius: 14px;
   padding: 12px;
@@ -387,6 +387,7 @@ body {
 
 .design-review-panel-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 8px;
 }
@@ -414,16 +415,26 @@ body {
   line-height: 1.45;
 }
 
+.design-review-current-page {
+  overflow: hidden;
+  margin: 0 2px 10px !important;
+  color: rgba(255, 255, 255, .86) !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .design-review-layer {
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
   z-index: 10001;
   cursor: crosshair;
   background: rgba(0, 0, 0, .06);
+  pointer-events: auto;
 }
 
 .design-annotation {
-  position: fixed;
+  position: absolute;
   z-index: 10003;
   display: grid;
   place-items: start end;

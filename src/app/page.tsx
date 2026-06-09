@@ -98,8 +98,8 @@ export default function Home() {
   const titleLines = getTitleLines(data.home.title, data.home.subtitle);
 
   return (
-    <main ref={rootRef} className="min-h-screen bg-[#f8f4ec] text-[#111111]">
-      <section className="story-pin relative h-screen overflow-hidden bg-[#f8f4ec] text-[#111111]">
+    <main ref={rootRef} className="min-h-screen bg-[#f8f4ec] text-[#111111]" data-review-page="home">
+      <section className="story-pin relative h-screen overflow-hidden bg-[#f8f4ec] text-[#111111]" data-review-id="home-hero">
         <div className="noise-field pointer-events-none absolute inset-0 opacity-70" />
         <div className="doodle-layer pointer-events-none absolute inset-0">
           <span className="scribble scribble-one" />
@@ -147,7 +147,7 @@ export default function Home() {
                 默认展示机器人外表面公司，鼠标移到模型上会切换到内部骨架构造与核心零部件公司。
               </Caption>
 
-              <div className="card-stage absolute inset-x-0 bottom-4 grid grid-cols-2 gap-3 md:bottom-0 md:gap-4">
+              <div className="card-stage absolute inset-x-0 bottom-4 grid grid-cols-2 gap-3 md:bottom-0 md:gap-4" data-review-id="home-sector-cards">
                 {sectors.map((sector) => (
                   <motion.a
                     aria-label={`打开${sector.title}`}
