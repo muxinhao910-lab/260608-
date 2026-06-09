@@ -349,3 +349,126 @@ body {
     transform: rotate(2deg) translateY(-5px);
   }
 }
+
+.design-review-toggle {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 10004;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: #ffffff;
+  background: rgba(12, 12, 12, .78);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .28);
+  backdrop-filter: blur(18px);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.design-review-toggle:hover {
+  border-color: #f36b21;
+}
+
+.design-review-panel {
+  position: fixed;
+  right: 18px;
+  bottom: 68px;
+  z-index: 10002;
+  width: min(360px, calc(100vw - 36px));
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 14px;
+  padding: 12px;
+  color: #ffffff;
+  background: rgba(12, 12, 12, .86);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .34);
+  backdrop-filter: blur(20px);
+}
+
+.design-review-panel-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.design-review-panel button {
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 999px;
+  padding: 8px 10px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, .08);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.design-review-panel button.is-active,
+.design-review-panel button:hover {
+  border-color: #f36b21;
+  background: rgba(243, 107, 33, .24);
+}
+
+.design-review-panel p {
+  margin: 6px 2px 0;
+  color: rgba(255, 255, 255, .62);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.design-review-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  cursor: crosshair;
+  background: rgba(0, 0, 0, .06);
+}
+
+.design-annotation {
+  position: fixed;
+  z-index: 10003;
+  display: grid;
+  place-items: start end;
+  border: 2px solid #f36b21;
+  color: #111111;
+  background: rgba(243, 107, 33, .08);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .42), 0 0 28px rgba(243, 107, 33, .32);
+  pointer-events: auto;
+}
+
+.design-annotation span {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  margin: -11px -11px 0 0;
+  border-radius: 999px;
+  color: #111111;
+  background: #f8f4ec;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.design-annotation-circle {
+  border-radius: 999px;
+}
+
+.design-annotation-pin {
+  place-items: center;
+  border-radius: 999px 999px 999px 2px;
+  background: #f36b21;
+  transform: rotate(-45deg);
+}
+
+.design-annotation-pin span {
+  margin: 0;
+  transform: rotate(45deg);
+}
+
+.design-annotation.is-selected {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, .48), 0 0 34px rgba(56, 189, 248, .38);
+}
+
+.design-annotation.is-draft {
+  z-index: 10002;
+  pointer-events: none;
+}

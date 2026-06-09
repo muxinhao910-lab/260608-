@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "checkpoint": "node scripts/checkpoint.js",
+    "history": "git log --oneline --decorate -20",
+    "rollback:last": "node scripts/rollback-last.js",
+    "diff:last": "node scripts/diff-last.js"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
