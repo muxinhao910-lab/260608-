@@ -15,7 +15,13 @@ if (!tags.length) {
   process.exit(1);
 }
 
-const checkpoint = tags[0];
+const head = git(["rev-parse", "HEAD"]);
+const checkpoint =
+  tags.find((tag) => {
+    const tagCommit = git(["rev-parse", tag]);
+    return tagCommit !== head;
+  }) || tags[0];
+
 console.log(`对比当前版本与 ${checkpoint}:`);
 git(["diff", "--stat", `${checkpoint}..HEAD`], { stdio: "inherit" });
 git(["diff", `${checkpoint}..HEAD`], { stdio: "inherit" });
