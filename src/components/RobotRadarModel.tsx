@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment, Float, OrbitControls } from "@react-three/drei";
 import { motion } from "framer-motion";
@@ -129,20 +129,92 @@ function pointToScreen(company: CompanyRecord) {
 }
 
 export function RobotRadarModel({ companies, activeCode, onSelect }: RobotRadarModelProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<number | null>(null);
+  const internalRef = useRef(false);
+  const pointerRef = useRef({ targetX: 0, targetY: 0, currentX: 0, currentY: 0, hover: false, reduced: false });
   const [internal, setInternal] = useState(false);
   const activeCompany = companies.find((company) => company.stockCode === activeCode) ?? companies[0];
 
+  function setInternalView(nextInternal: boolean) {
+    if (internalRef.current === nextInternal) {
+      return;
+    }
+    internalRef.current = nextInternal;
+    setInternal(nextInternal);
+  }
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    pointerRef.current.reduced = media.matches;
+    const onChange = () => {
+      pointerRef.current.reduced = media.matches;
+    };
+    media.addEventListener("change", onChange);
+
+    const tick = () => {
+      const state = pointerRef.current;
+      const root = rootRef.current;
+      if (root && !state.reduced) {
+        state.currentX += (state.targetX - state.currentX) * 0.1;
+        state.currentY += (state.targetY - state.currentY) * 0.1;
+        root.style.setProperty("--radar-x", state.currentX.toFixed(4));
+        root.style.setProperty("--radar-y", state.currentY.toFixed(4));
+        root.style.setProperty("--radar-hover", state.hover ? "1" : "0");
+      }
+      frameRef.current = window.requestAnimationFrame(tick);
+    };
+
+    frameRef.current = window.requestAnimationFrame(tick);
+    return () => {
+      media.removeEventListener("change", onChange);
+      if (frameRef.current) {
+        window.cancelAnimationFrame(frameRef.current);
+      }
+    };
+  }, []);
+
+  function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    const state = pointerRef.current;
+    if (event.pointerType !== "mouse" || state.reduced) {
+      return;
+    }
+    const rect = event.currentTarget.getBoundingClientRect();
+    state.targetX = (event.clientX - rect.left) / rect.width - 0.5;
+    state.targetY = (event.clientY - rect.top) / rect.height - 0.5;
+    state.hover = true;
+    setInternalView(true);
+  }
+
+  function handlePointerEnter(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "mouse") {
+      return;
+    }
+    pointerRef.current.hover = true;
+    setInternalView(true);
+  }
+
+  function handlePointerLeave() {
+    pointerRef.current.hover = false;
+    pointerRef.current.targetX = 0;
+    pointerRef.current.targetY = 0;
+    setInternalView(false);
+  }
+
   return (
     <div
-      className="robot-stage relative min-h-[760px] overflow-hidden bg-[#050505]"
-      onMouseEnter={() => setInternal(true)}
-      onPointerEnter={() => setInternal(true)}
-      onPointerMove={() => setInternal(true)}
-      onMouseLeave={() => setInternal(false)}
-      onPointerLeave={() => setInternal(false)}
+      className="robot-stage robot-hover-radar relative min-h-[760px] overflow-hidden bg-[#050505]"
+      data-review-id="robot-analysis-radar-model"
+      ref={rootRef}
+      onPointerEnter={handlePointerEnter}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(243,107,33,.24),transparent_35%),linear-gradient(120deg,rgba(255,255,255,.07)_0_1px,transparent_1px_18px)]" />
-      <Canvas camera={{ position: [0, 0.42, 5.25], fov: 40 }} dpr={[1, 1.6]}>
+      <div className="robot-hover-radar-bg absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(243,107,33,.24),transparent_35%),linear-gradient(120deg,rgba(255,255,255,.07)_0_1px,transparent_1px_18px)]" />
+      <div className="robot-hover-radar-aura robot-hover-radar-aura-orange" />
+      <div className="robot-hover-radar-aura robot-hover-radar-aura-blue" />
+      <div className="robot-hover-radar-scan" />
+      <Canvas className="robot-hover-radar-canvas" camera={{ position: [0, 0.42, 5.25], fov: 40 }} dpr={[1, 1.6]}>
         <color attach="background" args={["#050505"]} />
         <ambientLight intensity={0.7} />
         <directionalLight position={[2.6, 3.2, 4]} intensity={2.2} />
@@ -155,13 +227,6 @@ export function RobotRadarModel({ companies, activeCode, onSelect }: RobotRadarM
       <div className="pointer-events-none absolute left-1/2 top-6 z-10 -translate-x-1/2 border border-white/20 bg-black/40 px-4 py-2 text-center font-mono text-xs uppercase tracking-normal text-white/70 backdrop-blur">
         {internal ? "内部骨骼构造 / 核心零部件公司" : "外表面 / 外观材料公司待后台添加"}
       </div>
-      <button
-        className="absolute right-4 top-4 z-20 border border-[#f36b21] bg-black/70 px-3 py-2 font-mono text-[11px] uppercase tracking-normal text-[#f36b21] backdrop-blur hover:bg-[#f36b21] hover:text-black"
-        onClick={() => setInternal(true)}
-        type="button"
-      >
-        显示内部骨骼
-      </button>
 
       {internal ? (
         <>

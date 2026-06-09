@@ -350,6 +350,189 @@ body {
   }
 }
 
+.robot-hover-radar {
+  --radar-x: 0;
+  --radar-y: 0;
+  --radar-hover: 0;
+  isolation: isolate;
+  border: 1px solid rgba(255, 255, 255, .1);
+  box-shadow: inset 0 0 80px rgba(255, 255, 255, .035), 0 28px 90px rgba(0, 0, 0, .42);
+  transform-style: preserve-3d;
+}
+
+.robot-hover-radar::before,
+.robot-hover-radar::after {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  content: "";
+  pointer-events: none;
+}
+
+.robot-hover-radar::before {
+  border: 1px solid rgba(255, 255, 255, .08);
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, .12), transparent),
+    radial-gradient(circle at calc(50% + var(--radar-x) * 18%) calc(42% + var(--radar-y) * 18%), rgba(255, 255, 255, .14), transparent 28%);
+  opacity: .32;
+  mix-blend-mode: screen;
+}
+
+.robot-hover-radar::after {
+  background: linear-gradient(112deg, transparent 24%, rgba(255, 255, 255, .16) 46%, transparent 62%);
+  opacity: 0;
+  transform: translate3d(calc(var(--radar-x) * 34px), calc(var(--radar-y) * 22px), 0) rotate(4deg);
+  transition: opacity .35s ease;
+  mix-blend-mode: screen;
+}
+
+.robot-hover-radar:hover::after {
+  opacity: .32;
+}
+
+.robot-hover-radar-bg {
+  z-index: 0;
+  transform: translate3d(calc(var(--radar-x) * -18px), calc(var(--radar-y) * -12px), 0) scale(1.04);
+  transition: opacity .32s ease;
+  will-change: transform;
+}
+
+.robot-hover-radar-aura {
+  position: absolute;
+  z-index: 1;
+  width: min(38vw, 520px);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  opacity: .16;
+  filter: blur(52px);
+  pointer-events: none;
+  transition: opacity .35s ease, transform .18s ease-out;
+  will-change: transform, opacity;
+}
+
+.robot-hover-radar:hover .robot-hover-radar-aura {
+  opacity: .36;
+}
+
+.robot-hover-radar-aura-orange {
+  left: 8%;
+  top: 12%;
+  background: rgba(243, 107, 33, .58);
+  transform: translate3d(calc(var(--radar-x) * 24px), calc(var(--radar-y) * 16px), 0);
+}
+
+.robot-hover-radar-aura-blue {
+  right: 10%;
+  bottom: 8%;
+  background: rgba(56, 189, 248, .36);
+  transform: translate3d(calc(var(--radar-x) * -28px), calc(var(--radar-y) * -18px), 0);
+}
+
+.robot-hover-radar-scan {
+  position: absolute;
+  inset: -18%;
+  z-index: 6;
+  background: linear-gradient(100deg, transparent 32%, rgba(255, 255, 255, .16) 46%, rgba(243, 107, 33, .18) 50%, transparent 64%);
+  opacity: 0;
+  transform: translate3d(calc(var(--radar-x) * 42px), calc(var(--radar-y) * 26px), 0) rotate(7deg);
+  transition: opacity .35s ease;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.robot-hover-radar:hover .robot-hover-radar-scan {
+  opacity: .38;
+}
+
+.robot-hover-radar-canvas {
+  position: relative;
+  z-index: 2;
+  transform: perspective(1200px) rotateX(calc(var(--radar-y) * -3deg)) rotateY(calc(var(--radar-x) * 4deg)) translate3d(calc(var(--radar-x) * 18px), calc(var(--radar-y) * 12px), 0);
+  transform-origin: center;
+  transition: transform .16s ease-out, filter .28s ease;
+  will-change: transform;
+}
+
+.robot-hover-radar:hover .robot-hover-radar-canvas {
+  filter: drop-shadow(0 0 26px rgba(243, 107, 33, .14));
+  transform: perspective(1200px) rotateX(calc(var(--radar-y) * -3deg)) rotateY(calc(var(--radar-x) * 4deg)) translate3d(calc(var(--radar-x) * 18px), calc(var(--radar-y) * 12px), 0) scale(1.018);
+}
+
+.robot-hover-radar > svg {
+  z-index: 8;
+  transform: translate3d(calc(var(--radar-x) * 8px), calc(var(--radar-y) * 5px), 0);
+  transition: opacity .25s ease, transform .18s ease-out;
+  will-change: transform;
+}
+
+.robot-hover-radar > svg line {
+  transition: stroke .25s ease, stroke-width .25s ease, opacity .25s ease;
+}
+
+.robot-hover-radar:hover > svg line {
+  opacity: .94;
+}
+
+.robot-hover-radar button,
+.robot-hover-radar .absolute.z-10 {
+  will-change: transform, box-shadow, border-color;
+}
+
+.robot-hover-radar button:hover {
+  box-shadow: 0 0 26px rgba(243, 107, 33, .34), inset 0 0 18px rgba(255, 255, 255, .05);
+}
+
+@keyframes robot-radar-mobile-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@media (max-width: 768px) {
+  .robot-hover-radar {
+    min-height: 620px;
+  }
+
+  .robot-hover-radar-bg,
+  .robot-hover-radar-aura,
+  .robot-hover-radar-scan,
+  .robot-hover-radar > svg {
+    transform: none;
+  }
+
+  .robot-hover-radar-canvas {
+    transform: none;
+    animation: robot-radar-mobile-float 7s ease-in-out infinite;
+  }
+
+  .robot-hover-radar:hover .robot-hover-radar-canvas {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .robot-hover-radar-bg,
+  .robot-hover-radar-aura,
+  .robot-hover-radar-scan,
+  .robot-hover-radar-canvas,
+  .robot-hover-radar > svg {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .robot-hover-radar::after {
+    opacity: 0 !important;
+    transition: none !important;
+  }
+}
+
 .design-review-toggle {
   position: fixed;
   right: 18px;
