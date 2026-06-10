@@ -6,7 +6,7 @@ export function DeveloperModeEntry() {
   }
 
   return (
-    <Link className="developer-mode-entry" href="/admin/dashboard">
+    <Link className="developer-mode-entry" href="/admin/builder">
       开发者模式
     </Link>
   );
