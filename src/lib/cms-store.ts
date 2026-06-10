@@ -140,12 +140,12 @@ export const defaultSiteData: SiteData = {
       status: "reserved"
     },
     {
-      id: "optical-module",
+      id: "optical",
       order: 4,
       number: "04",
       title: "光模块板块",
-      slug: "optical-module",
-      path: "/sector/optical-module",
+      slug: "optical",
+      path: "/sector/optical",
       summary: "光芯片、光器件、光模块、交换机链条，后续扩展为光通信研究雷达。",
       status: "reserved"
     }
@@ -199,8 +199,29 @@ export const defaultSiteData: SiteData = {
   }))
 };
 
+function normalizeSiteData(data: SiteData): SiteData {
+  return {
+    ...data,
+    sectors: data.sectors.map((sector) => {
+      if (sector.id === "optical-module" || sector.slug === "optical-module" || sector.number === "04") {
+        return { ...sector, id: sector.id === "optical-module" ? "optical" : sector.id, slug: "optical", path: "/sector/optical" };
+      }
+      if (sector.id === "robotics" || sector.slug === "robotics" || sector.number === "01") {
+        return { ...sector, slug: "robotics", path: "/sector/robotics" };
+      }
+      if (sector.id === "semiconductor" || sector.slug === "semiconductor" || sector.number === "02") {
+        return { ...sector, slug: "semiconductor", path: "/sector/semiconductor" };
+      }
+      if (sector.id === "ai" || sector.slug === "ai" || sector.number === "03") {
+        return { ...sector, slug: "ai", path: "/sector/ai" };
+      }
+      return sector;
+    })
+  };
+}
+
 function cloneDefault(): SiteData {
-  return JSON.parse(JSON.stringify(defaultSiteData)) as SiteData;
+  return normalizeSiteData(JSON.parse(JSON.stringify(defaultSiteData)) as SiteData);
 }
 
 export function getSiteData(): SiteData {
@@ -217,7 +238,7 @@ export function getSiteData(): SiteData {
     return seeded;
   }
   try {
-    return JSON.parse(raw) as SiteData;
+    return normalizeSiteData(JSON.parse(raw) as SiteData);
   } catch {
     const seeded = cloneDefault();
     window.localStorage.setItem(STORE_KEY, JSON.stringify(seeded));

@@ -4,9 +4,12 @@ export default function AdminBuilderPage() {
   return (
     <main className="admin-route-card">
       <p>WEB BUILDER V3</p>
-      <h1>首页可视化搭建器入口</h1>
-      <span>Builder V3 直接在首页 `/` 右下角进入。这里保留为后台管理入口，路由切换不会卸载后台 layout。</span>
-      <Link href="/">打开首页 Builder</Link>
+      <h1>Builder 与 Admin 分工</h1>
+      <span>
+        Builder / 开发者模式负责页面视觉布局、基础组件添加、拖动位置、缩放尺寸，以及按钮、文字、图片编辑。
+        Admin 后台负责内容数据、产业板块、公司资料、信息卡片和可信度规则维护。Admin 不做拖拽页面搭建。
+      </span>
+      <Link href="/?builder=1">打开首页开发者模式</Link>
     </main>
   );
 }

@@ -115,6 +115,7 @@ body {
 
 .grid-card,
 .sector-button {
+  cursor: pointer;
   will-change: transform, opacity, background-color, color;
 }
 
@@ -2320,8 +2321,10 @@ body {
   color: #111111;
   background: #f36b21;
   box-shadow: 0 18px 44px rgba(0, 0, 0, .28);
+  cursor: pointer;
   font-size: 14px;
   font-weight: 900;
+  pointer-events: auto;
 }
 
 .wbv3-shell {

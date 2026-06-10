@@ -16,12 +16,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const isLogin = pathname === "/admin/login";
+  const shouldRequireLogin = process.env.NODE_ENV === "production";
 
   useEffect(() => {
-    if (!isLogin && !isAdminLoggedIn()) {
+    if (!isLogin && shouldRequireLogin && !isAdminLoggedIn()) {
       router.replace("/admin/login");
     }
-  }, [isLogin, router]);
+  }, [isLogin, router, shouldRequireLogin]);
 
   if (isLogin) {
     return children;
@@ -33,7 +34,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Link className="admin-shell-logo" href="/admin/dashboard">Admin</Link>
         <nav>
           {adminLinks.map((item) => (
-            <Link className={pathname === item.href ? "is-active" : ""} href={item.href} key={item.href}>
+            <Link
+              aria-current={pathname === item.href || pathname.startsWith(`${item.href}/`) ? "page" : undefined}
+              className={pathname === item.href || pathname.startsWith(`${item.href}/`) ? "is-active" : ""}
+              href={item.href}
+              key={item.href}
+            >
               {item.label}
             </Link>
           ))}

@@ -41,12 +41,13 @@ export default function AdminDashboard() {
   const { data, update, reset } = useSiteDataStore();
   const [tab, setTab] = useState<AdminTab>("home");
   const [message, setMessage] = useState("");
+  const shouldRequireLogin = process.env.NODE_ENV === "production";
 
   useEffect(() => {
-    if (!isAdminLoggedIn()) {
+    if (shouldRequireLogin && !isAdminLoggedIn()) {
       router.replace("/admin/login");
     }
-  }, [router]);
+  }, [router, shouldRequireLogin]);
 
   function save(next: SiteData, text = "已保存") {
     update(next);

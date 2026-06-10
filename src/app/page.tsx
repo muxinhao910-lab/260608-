@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -89,14 +89,6 @@ export default function Home() {
     { scope: rootRef, dependencies: [sectors.length] }
   );
 
-  function handleSectorClick(event: ReactMouseEvent<HTMLAnchorElement>, sector: SectorRecord) {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
-      return;
-    }
-    event.preventDefault();
-    startRouteCountdown(sector);
-  }
-
   const titleLines = getTitleLines(data.home.title, data.home.subtitle);
 
   return (
@@ -119,12 +111,9 @@ export default function Home() {
               {sectors.map((sector) => (
                 <a
                   aria-label={`进入${sector.title}`}
-                  className="border border-current bg-white/70 px-2 py-1 text-black hover:bg-[#f36b21]"
+                  className="cursor-pointer border border-current bg-white/70 px-2 py-1 text-black hover:bg-[#f36b21]"
                   href={sector.path}
                   key={sector.id}
-                  onClick={(event) => {
-                    handleSectorClick(event, sector);
-                  }}
                 >
                   {sector.number} <span className="hidden sm:inline">{shortSectorTitle(sector.title)}</span>
                 </a>
@@ -154,12 +143,9 @@ export default function Home() {
                 {sectors.map((sector) => (
                   <motion.a
                     aria-label={`打开${sector.title}`}
-                    className="sector-button min-h-[132px] border-2 border-current bg-white p-4 text-left shadow-[8px_8px_0_#111111] md:min-h-[168px] md:p-5"
+                    className="sector-button min-h-[132px] cursor-pointer border-2 border-current bg-white p-4 text-left shadow-[8px_8px_0_#111111] md:min-h-[168px] md:p-5"
                     href={sector.path}
                     key={sector.id}
-                    onClick={(event) => {
-                      handleSectorClick(event, sector);
-                    }}
                     transition={{ type: "spring", stiffness: 260, damping: 18 }}
                     whileHover={{ y: -8, rotate: -1, scale: 1.02 }}
                   >
