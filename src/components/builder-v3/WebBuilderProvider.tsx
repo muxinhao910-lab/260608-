@@ -1,110 +1,111 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { defaultHomeCanvas } from "@/data/defaultHomeCanvas";
-import type { BuilderElement, BuilderElementLayout, WebBuilderDocument, WebBuilderElementType } from "@/types/webBuilder";
+import type { BuilderElement, BuilderElementLayout, BuilderPage, BuilderPages, WebBuilderElementType } from "@/types/webBuilder";
 import {
-  WEB_BUILDER_STORAGE_KEY,
-  cloneDocument,
-  copyInstruction,
+  HOME_PATH,
+  LEGACY_BUILDER_KEYS,
+  WEB_BUILDER_PAGES_KEY,
+  clonePages,
   createDefaultElement,
-  getStoredDocument,
+  createEmptyHomePage,
+  getStoredPages,
   nextZIndex,
-  parseWebBuilderDocument
+  snap
 } from "./webBuilderUtils";
+import { elementRegistry } from "./elementRegistry";
 
-type WebBuilderContextValue = {
-  document: WebBuilderDocument;
-  selectedId: string | null;
-  selectedElement: BuilderElement | null;
-  isBuilderOpen: boolean;
-  isPreview: boolean;
-  status: string;
-  openBuilder: () => void;
-  closeBuilder: () => void;
-  togglePreview: () => void;
-  selectElement: (id: string | null) => void;
-  addElement: (type: WebBuilderElementType, position?: { x: number; y: number }) => void;
-  updateElement: (id: string, patch: Partial<BuilderElement>) => void;
-  updateElementProps: (id: string, props: Record<string, unknown>) => void;
-  updateElementLayout: (id: string, layout: Partial<BuilderElementLayout>) => void;
-  duplicateElement: (id: string) => void;
-  deleteElement: (id: string) => void;
-  bringToFront: (id: string) => void;
-  sendToBack: (id: string) => void;
-  toggleLocked: (id: string) => void;
-  toggleHidden: (id: string) => void;
-  save: () => void;
-  reset: () => void;
-  undo: () => void;
-  redo: () => void;
-  exportJson: () => Promise<void>;
-  importJson: (raw: string) => void;
-  copyCodexInstruction: (id: string) => Promise<void>;
-};
-
-const WebBuilderContext = createContext<WebBuilderContextValue | null>(null);
 type BuilderElementPatch = Omit<Partial<BuilderElement>, "layout" | "props"> & {
   layout?: Partial<BuilderElementLayout>;
   props?: Record<string, unknown>;
 };
 
-export function WebBuilderProvider({ children, initialOpen = false }: { children: ReactNode; initialOpen?: boolean }) {
-  const [document, setDocument] = useState<WebBuilderDocument>(() => cloneDocument(defaultHomeCanvas));
+type WebBuilderContextValue = {
+  page: BuilderPage;
+  selectedId: string | null;
+  selectedElement: BuilderElement | null;
+  isBuilderOpen: boolean;
+  status: string;
+  openBuilder: () => void;
+  closeBuilder: () => void;
+  selectElement: (id: string | null) => void;
+  addElement: (type: WebBuilderElementType) => void;
+  updateElement: (id: string, patch: BuilderElementPatch) => void;
+  updateElementProps: (id: string, props: Record<string, unknown>) => void;
+  updateElementLayout: (id: string, layout: Partial<BuilderElementLayout>) => void;
+  duplicateElement: (id: string) => void;
+  deleteElement: (id: string) => void;
+  toggleLocked: (id: string) => void;
+  toggleHidden: (id: string) => void;
+  save: () => void;
+  reset: () => void;
+  clearLegacyData: () => void;
+};
+
+const WebBuilderContext = createContext<WebBuilderContextValue | null>(null);
+
+export function WebBuilderProvider({ children }: { children: ReactNode }) {
+  const [pages, setPages] = useState<BuilderPages>(() => ({ [HOME_PATH]: createEmptyHomePage() }));
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [isBuilderOpen, setIsBuilderOpen] = useState(initialOpen);
-  const [isPreview, setIsPreview] = useState(false);
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [status, setStatus] = useState("");
-  const [past, setPast] = useState<WebBuilderDocument[]>([]);
-  const [future, setFuture] = useState<WebBuilderDocument[]>([]);
 
   useEffect(() => {
-    setDocument(getStoredDocument());
+    setPages(getStoredPages());
+    if (new URLSearchParams(window.location.search).get("builder") === "1") {
+      setIsBuilderOpen(true);
+    }
   }, []);
 
-  const selectedElement = useMemo(
-    () => document.elements.find((element) => element.id === selectedId) || null,
-    [document.elements, selectedId]
-  );
+  const page = pages[HOME_PATH] || createEmptyHomePage();
+  const selectedElement = useMemo(() => page.elements.find((element) => element.id === selectedId) || null, [page.elements, selectedId]);
 
-  function commit(updater: (current: WebBuilderDocument) => WebBuilderDocument) {
-    setDocument((current) => {
-      setPast((items) => [...items.slice(-39), cloneDocument(current)]);
-      setFuture([]);
-      return updater(cloneDocument(current));
+  function commit(updater: (current: BuilderPage) => BuilderPage) {
+    setPages((current) => {
+      const next = clonePages(current);
+      next[HOME_PATH] = updater(next[HOME_PATH] || createEmptyHomePage());
+      return next;
     });
   }
 
   function updateElement(id: string, patch: BuilderElementPatch) {
     commit((current) => ({
       ...current,
-      elements: current.elements.map((element) => (element.id === id ? { ...element, ...patch, layout: { ...element.layout, ...patch.layout }, props: { ...element.props, ...patch.props } } : element))
+      elements: current.elements.map((element) =>
+        element.id === id
+          ? {
+              ...element,
+              ...patch,
+              layout: { ...element.layout, ...patch.layout },
+              props: { ...element.props, ...patch.props }
+            }
+          : element
+      )
     }));
   }
 
   const value = useMemo<WebBuilderContextValue>(
     () => ({
-      document,
+      page,
       selectedId,
       selectedElement,
       isBuilderOpen,
-      isPreview,
       status,
-      openBuilder: () => {
-        setIsBuilderOpen(true);
-        setIsPreview(false);
-      },
+      openBuilder: () => setIsBuilderOpen(true),
       closeBuilder: () => {
         setIsBuilderOpen(false);
-        setIsPreview(false);
         setSelectedId(null);
       },
-      togglePreview: () => setIsPreview((current) => !current),
       selectElement: setSelectedId,
-      addElement: (type, position) => {
+      addElement: (type) => {
         commit((current) => {
-          const element = createDefaultElement(type, position?.x ?? current.canvas.width / 2 - 160, position?.y ?? 140, current.elements);
+          const element = createDefaultElement(type, 0, 0, current.elements);
+          const canvasWidth = Math.max(320, window.innerWidth - 296 - 336);
+          const canvasHeight = Math.max(240, window.innerHeight - 78 - 18);
+          element.layout.x = snap(Math.max(16, canvasWidth / 2 - element.layout.width / 2));
+          element.layout.y = snap(Math.max(16, canvasHeight / 2 - element.layout.height / 2));
           setSelectedId(element.id);
+          setStatus(`${elementRegistry[type].labelZh} 已添加。`);
           return { ...current, elements: [...current.elements, element] };
         });
       },
@@ -115,8 +116,8 @@ export function WebBuilderProvider({ children, initialOpen = false }: { children
         commit((current) => {
           const source = current.elements.find((element) => element.id === id);
           if (!source) return current;
-          const copy = cloneDocument({ ...current, elements: [source] }).elements[0];
-          copy.id = `${source.id}_copy_${Date.now().toString(16)}`;
+          const copy: BuilderElement = JSON.parse(JSON.stringify(source)) as BuilderElement;
+          copy.id = `${source.id}-copy-${Date.now().toString(36)}`;
           copy.layout.x += 32;
           copy.layout.y += 32;
           copy.layout.zIndex = nextZIndex(current.elements);
@@ -129,62 +130,31 @@ export function WebBuilderProvider({ children, initialOpen = false }: { children
         commit((current) => ({ ...current, elements: current.elements.filter((element) => element.id !== id) }));
         setSelectedId((current) => (current === id ? null : current));
       },
-      bringToFront: (id) => updateElement(id, { layout: { zIndex: nextZIndex(document.elements) } }),
-      sendToBack: (id) => updateElement(id, { layout: { zIndex: 1 } }),
       toggleLocked: (id) => {
-        const element = document.elements.find((item) => item.id === id);
+        const element = page.elements.find((item) => item.id === id);
         if (element) updateElement(id, { layout: { locked: !element.layout.locked } });
       },
       toggleHidden: (id) => {
-        const element = document.elements.find((item) => item.id === id);
+        const element = page.elements.find((item) => item.id === id);
         if (element) updateElement(id, { layout: { hidden: !element.layout.hidden } });
       },
       save: () => {
-        window.localStorage.setItem(WEB_BUILDER_STORAGE_KEY, JSON.stringify(document, null, 2));
+        window.localStorage.setItem(WEB_BUILDER_PAGES_KEY, JSON.stringify({ [HOME_PATH]: page }, null, 2));
         setStatus("已保存到 localStorage。");
       },
       reset: () => {
-        if (!window.confirm("确定重置为默认画布吗？")) return;
-        window.localStorage.removeItem(WEB_BUILDER_STORAGE_KEY);
-        commit(() => cloneDocument(defaultHomeCanvas));
+        if (!window.confirm("确定重置 Builder 吗？这会清空首页叠加元素，原首页会保持不变。")) return;
+        window.localStorage.removeItem(WEB_BUILDER_PAGES_KEY);
+        setPages({ [HOME_PATH]: createEmptyHomePage() });
         setSelectedId(null);
-        setStatus("已恢复默认画布。");
+        setStatus("已重置，当前显示原首页。");
       },
-      undo: () => {
-        setPast((items) => {
-          const previous = items.at(-1);
-          if (!previous) return items;
-          setFuture((futureItems) => [cloneDocument(document), ...futureItems]);
-          setDocument(previous);
-          return items.slice(0, -1);
-        });
-      },
-      redo: () => {
-        setFuture((items) => {
-          const next = items[0];
-          if (!next) return items;
-          setPast((pastItems) => [...pastItems, cloneDocument(document)]);
-          setDocument(next);
-          return items.slice(1);
-        });
-      },
-      exportJson: async () => {
-        await navigator.clipboard.writeText(JSON.stringify(document, null, 2));
-        setStatus("已复制 Web Builder V3 JSON。");
-      },
-      importJson: (raw) => {
-        commit(() => parseWebBuilderDocument(raw));
-        setSelectedId(null);
-        setStatus("已导入 JSON，点击保存后写入 localStorage。");
-      },
-      copyCodexInstruction: async (id) => {
-        const element = document.elements.find((item) => item.id === id);
-        if (!element) return;
-        await navigator.clipboard.writeText(copyInstruction(element));
-        setStatus("已复制给 Codex 的修改指令。");
+      clearLegacyData: () => {
+        LEGACY_BUILDER_KEYS.forEach((key) => window.localStorage.removeItem(key));
+        setStatus(`已清除旧 Builder 数据：${LEGACY_BUILDER_KEYS.join("、")}`);
       }
     }),
-    [document, isBuilderOpen, isPreview, selectedElement, selectedId, status]
+    [isBuilderOpen, page, selectedElement, selectedId, status]
   );
 
   return <WebBuilderContext.Provider value={value}>{children}</WebBuilderContext.Provider>;
