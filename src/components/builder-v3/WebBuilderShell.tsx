@@ -15,11 +15,7 @@ export function WebBuilderShell() {
   }, []);
 
   if (!builder.isBuilderOpen) {
-    return process.env.NODE_ENV !== "production" ? (
-      <button aria-label="打开开发者模式" aria-pressed={builder.isBuilderOpen} className="wbv3-dev-button" title="打开开发者模式" type="button" onClick={builder.openBuilder}>
-        开发者模式
-      </button>
-    ) : null;
+    return null;
   }
 
   return (

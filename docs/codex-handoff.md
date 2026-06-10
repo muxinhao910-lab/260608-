@@ -24,7 +24,7 @@ https://github.com/muxinhao910-lab/260608-
 ## Phase 0 Status In This Branch
 - 首页 4 个产业入口已改回直接链接跳转。
 - `/sector/semiconductor`、`/sector/ai`、`/sector/optical` 有最小占位页承接。
-- 右下角开发者模式按钮已补打开状态反馈。
+- 右下角开发者模式入口是全局真实链接，首页和板块详情页都会显示，点击进入 `/admin/dashboard`。
 - Admin 在开发环境可直接进入并切换左侧菜单与 dashboard 内部 tab。
 - 未恢复首页滑动动效，未继续 Builder Phase 2 / 3。
 
