@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   createId,
@@ -67,7 +68,7 @@ export default function AdminDashboard() {
             <h1 className="mt-2 font-serif text-5xl font-black leading-none md:text-7xl">Admin Panel</h1>
           </div>
           <div className="flex gap-2">
-            <a className="border border-white/20 px-4 py-3 font-mono text-xs uppercase tracking-normal hover:border-[#f36b21] hover:text-[#f36b21]" href="/">前台首页</a>
+            <Link className="border border-white/20 px-4 py-3 font-mono text-xs uppercase tracking-normal hover:border-[#f36b21] hover:text-[#f36b21]" href="/">前台首页</Link>
             <button className="border border-white/20 px-4 py-3 font-mono text-xs uppercase tracking-normal hover:border-[#f36b21] hover:text-[#f36b21]" onClick={logout} type="button">退出</button>
           </div>
         </header>
@@ -478,4 +479,3 @@ function SelectInput({ label, value, options, labels, onChange }: { label: strin
 function lines(value: string) {
   return value.split("\n").map((item) => item.trim()).filter(Boolean);
 }
-
