@@ -18,7 +18,7 @@ https://github.com/muxinhao910-lab/260608-
 
 ## Recent Commits
 ```text
-105b38b docs: update handoff after GitHub upload
+current docs: update handoff after GitHub upload
 a11e5d7 assets: add website robot image materials
 4e37bf5 docs: add codex handoff report
 bcbdfba chore: upload current website state before further fixes
