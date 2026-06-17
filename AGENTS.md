@@ -146,4 +146,24 @@ At the end of every task, report:
 8. Push status
 9. Known limitations or unfinished parts
 
+## Project Memory Rule
+
+Chat history is not the source of truth.
+
+Repository documentation is the source of truth.
+
+At the start of every task, inspect these files when relevant:
+
+- `docs/project-memory.md`
+- `docs/current-state.md`
+- `docs/decision-log.md`
+- `docs/product-vision.md`
+- `docs/acceptance-checklist.md`
+
+If the task involves a specific role, also inspect the corresponding file in:
+
+- `docs/role-cards/`
+
+At the end of a task, report whether any new decision should be added to `docs/decision-log.md` or `docs/current-state.md`.
+
 Never say “done” without evidence.
