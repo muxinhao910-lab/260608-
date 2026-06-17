@@ -32,15 +32,79 @@ const blockLabels: Record<PageBlockType, string> = {
   divider: "分割线"
 };
 
+type BuilderHrefValidationResult =
+  | { ok: true; href: string }
+  | { ok: false; message: string };
+
+type BuilderSavePreparationResult =
+  | { ok: true; blocks: PageBlock[] }
+  | { ok: false; blockId: string; message: string };
+
+const unsafeUrlCharacters = /[\u0000-\u001F\u007F\\]/;
+
+export function validateBuilderHrefInput(value: string): BuilderHrefValidationResult {
+  const href = value.trim();
+
+  if (!href) {
+    return { ok: false, message: "URL 不能为空。" };
+  }
+
+  if (unsafeUrlCharacters.test(href)) {
+    return { ok: false, message: "URL 不能包含控制字符或反斜杠。" };
+  }
+
+  if (href.startsWith("//")) {
+    return { ok: false, message: "URL 不能使用协议相对外部地址（//example.com/path）。" };
+  }
+
+  if (href.startsWith("/") || href.startsWith("#")) {
+    return { ok: true, href };
+  }
+
+  try {
+    const parsed = new URL(href);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return { ok: true, href: parsed.href };
+    }
+  } catch {
+    return { ok: false, message: "URL 必须以 /、#、http:// 或 https:// 开头。" };
+  }
+
+  return { ok: false, message: "URL 只允许站内路径、页面锚点、http:// 或 https://。" };
+}
+
+export function preparePageBuilderBlocksForSave(blocks: PageBlock[]): BuilderSavePreparationResult {
+  const prepared: PageBlock[] = [];
+
+  for (const block of blocks) {
+    if (block.type === "button" || block.type === "sector-card") {
+      const validation = validateBuilderHrefInput(block.href);
+
+      if (!validation.ok) {
+        return { ok: false, blockId: block.id, message: validation.message };
+      }
+
+      prepared.push({ ...block, href: validation.href });
+      continue;
+    }
+
+    prepared.push(block);
+  }
+
+  return { ok: true, blocks: prepared };
+}
+
 export function PageBuilderEditor() {
   const [blocks, setBlocks] = useState<PageBlock[]>(defaultPageBlocks);
   const [selectedId, setSelectedId] = useState(defaultPageBlocks[0]?.id ?? "");
   const [message, setMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const stored = getPageBuilderBlocks();
     setBlocks(stored);
     setSelectedId(stored[0]?.id ?? "");
+    setFieldErrors({});
   }, []);
 
   const selectedBlock = useMemo(() => blocks.find((block) => block.id === selectedId) ?? null, [blocks, selectedId]);
@@ -54,21 +118,49 @@ export function PageBuilderEditor() {
 
   function updateBlock(id: string, patch: Record<string, string | number>) {
     setBlocks((current) => current.map((block) => (block.id === id ? ({ ...block, ...patch } as PageBlock) : block)));
+    setFieldErrors((current) => {
+      if (!current[id]) {
+        return current;
+      }
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
   }
 
   function saveBlocks() {
-    savePageBuilderBlocks(blocks);
-    setMessage("页面已保存到 localStorage");
+    const prepared = preparePageBuilderBlocksForSave(blocks);
+
+    if (!prepared.ok) {
+      setSelectedId(prepared.blockId);
+      setFieldErrors({ [prepared.blockId]: prepared.message });
+      setMessage(`保存失败：${prepared.message}`);
+      return;
+    }
+
+    try {
+      savePageBuilderBlocks(prepared.blocks);
+      setBlocks(prepared.blocks);
+      setFieldErrors({});
+      setMessage("独立草稿已保存到 localStorage；不会发布到正式首页。");
+    } catch {
+      setMessage("保存失败：localStorage 写入失败，请检查浏览器存储权限后重试。");
+    }
   }
 
   function resetBlocks() {
     if (!window.confirm("确定重置 Builder 页面吗？这会恢复默认模块。")) {
       return;
     }
-    const next = resetPageBuilderBlocks();
-    setBlocks(next);
-    setSelectedId(next[0]?.id ?? "");
-    setMessage("已重置为默认模块");
+    try {
+      const next = resetPageBuilderBlocks();
+      setBlocks(next);
+      setSelectedId(next[0]?.id ?? "");
+      setFieldErrors({});
+      setMessage("已重置为默认模块；当前仍是 Builder 独立草稿，未发布正式首页。");
+    } catch {
+      setMessage("保存失败：localStorage 写入失败，重置未完成。");
+    }
   }
 
   return (
@@ -77,6 +169,7 @@ export function PageBuilderEditor() {
         <div>
           <p>WEB BUILDER</p>
           <h1>网站组件编辑器</h1>
+          <p className="page-builder-muted">当前编辑内容是 Builder 独立草稿；保存不会发布到正式首页。</p>
         </div>
         <div className="page-builder-actions">
           {message ? <span>{message}</span> : null}
@@ -127,7 +220,11 @@ export function PageBuilderEditor() {
             <p>属性编辑区</p>
             <h2>{selectedBlock ? blockLabels[selectedBlock.type] : "未选择模块"}</h2>
           </div>
-          {selectedBlock ? <BlockInspector block={selectedBlock} updateBlock={updateBlock} /> : <p className="page-builder-muted">请先添加或选择一个模块。</p>}
+          {selectedBlock ? (
+            <BlockInspector block={selectedBlock} hrefError={fieldErrors[selectedBlock.id] ?? ""} updateBlock={updateBlock} />
+          ) : (
+            <p className="page-builder-muted">请先添加或选择一个模块。</p>
+          )}
         </aside>
       </section>
     </main>
@@ -173,9 +270,11 @@ function BlockPreview({ block }: { block: PageBlock }) {
 
 function BlockInspector({
   block,
+  hrefError,
   updateBlock
 }: {
   block: PageBlock;
+  hrefError: string;
   updateBlock: (id: string, patch: Record<string, string | number>) => void;
 }) {
   switch (block.type) {
@@ -200,6 +299,7 @@ function BlockInspector({
         <div className="page-builder-fields">
           <TextInput label="按钮文字" value={block.text} onChange={(value) => updateBlock(block.id, { text: value })} />
           <TextInput label="跳转链接" value={block.href} onChange={(value) => updateBlock(block.id, { href: value })} />
+          {hrefError ? <p className="page-builder-muted" role="alert">{hrefError}</p> : null}
         </div>
       );
     case "banner":
@@ -222,6 +322,7 @@ function BlockInspector({
           <TextInput label="标题" value={block.title} onChange={(value) => updateBlock(block.id, { title: value })} />
           <TextArea label="描述" value={block.description} onChange={(value) => updateBlock(block.id, { description: value })} />
           <TextInput label="href" value={block.href} onChange={(value) => updateBlock(block.id, { href: value })} />
+          {hrefError ? <p className="page-builder-muted" role="alert">{hrefError}</p> : null}
         </div>
       );
     case "divider":
