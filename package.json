@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "verify": "npm run build",
+    "smoke": "node scripts/smoke-check.mjs",
     "start": "next start",
     "lint": "next lint",
     "checkpoint": "node scripts/checkpoint.js",
