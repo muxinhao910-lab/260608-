@@ -105,6 +105,12 @@ export type PageBlockType = PageBlock["type"];
 
 const STORE_KEY = "chain-radar-cms-v1";
 const PAGE_BUILDER_BLOCKS_KEY = "chain-radar-page-builder-blocks-v1";
+const ADMIN_SESSION_KEY = "chain-radar-admin-session";
+
+export const adminCredential = {
+  username: "admin",
+  password: "radar123",
+};
 
 const robotSectorId = "robotics";
 
@@ -288,10 +294,18 @@ export function isAdminLoggedIn() {
   return true;
 }
 
-export function setAdminLoggedIn(value: boolean) {
-  if (!value && typeof window !== "undefined") {
-    window.location.assign("/admin/logout");
+export function setAdminLoggedIn(value = true) {
+  if (typeof window === "undefined") {
+    return;
   }
+
+  if (value) {
+    window.localStorage.setItem(ADMIN_SESSION_KEY, "1");
+    return;
+  }
+
+  window.localStorage.removeItem(ADMIN_SESSION_KEY);
+  window.location.assign("/admin/logout");
 }
 
 export function isValidUrl(value: string) {
