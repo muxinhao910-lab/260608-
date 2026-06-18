@@ -37,10 +37,21 @@ test("admin auth baseline does not allow client-side forged login", () => {
   assert.match(loginPage, /httpOnly:\s*true/);
 });
 
+test("admin session cookie does not trust a public fixed value", () => {
+  assert.equal(loginPage.includes('ADMIN_SESSION_VALUE = "active"'), false);
+  assert.equal(adminIndexPage.includes('ADMIN_SESSION_VALUE = "active"'), false);
+  assert.equal(adminDashboardPage.includes('ADMIN_SESSION_VALUE = "active"'), false);
+  assert.equal(loginPage.includes("randomBytes"), true);
+  assert.equal(loginPage.includes("createHmac"), true);
+  assert.equal(adminIndexPage.includes("timingSafeEqual"), true);
+  assert.equal(adminDashboardPage.includes("timingSafeEqual"), true);
+});
+
 test("admin entry uses server cookie routing", () => {
   assert.equal(adminIndexPage.includes('"use client"'), false);
   assert.match(adminIndexPage, /cookies/);
   assert.match(adminIndexPage, /chain-radar-admin-session/);
+  assert.match(adminIndexPage, /isValidAdminSession/);
   assert.match(adminIndexPage, /redirect\(isAdminSessionActive \? "\/admin\/dashboard" : "\/admin\/login"\)/);
 });
 
@@ -49,6 +60,7 @@ test("admin dashboard no longer kicks out authenticated users with client storag
   assert.match(adminDashboardPage, /cookies/);
   assert.match(adminDashboardPage, /chain-radar-admin-session/);
   assert.match(adminDashboardPage, /isAdminSessionActive/);
+  assert.match(adminDashboardPage, /isValidAdminSession/);
   assert.match(adminDashboardPage, /redirect\("\/admin\/login"\)/);
   assert.match(adminDashboardPage, /AdminDashboardClient/);
   assert.equal(adminDashboardPage.includes("logoutAction"), false);

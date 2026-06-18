@@ -1,8 +1,9 @@
+import { createHmac, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 const ADMIN_SESSION_KEY = "chain-radar-admin-session";
-const ADMIN_SESSION_VALUE = "active";
+const ADMIN_SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 
 function isAdminAuthConfigured() {
   return Boolean(process.env.CHAIN_RADAR_ADMIN_USER && process.env.CHAIN_RADAR_ADMIN_PASSWORD);
@@ -17,6 +18,21 @@ function validateAdminCredentials(username: string, password: string) {
   return username.trim() === expectedUser && password === expectedPassword;
 }
 
+function getAdminSessionSecret() {
+  return process.env.CHAIN_RADAR_ADMIN_SESSION_SECRET ?? process.env.CHAIN_RADAR_ADMIN_PASSWORD ?? "";
+}
+
+function signAdminSession(payload: string) {
+  return createHmac("sha256", getAdminSessionSecret()).update(payload).digest("base64url");
+}
+
+function createAdminSessionValue() {
+  const issuedAt = String(Date.now());
+  const nonce = randomBytes(32).toString("base64url");
+  const payload = `${issuedAt}.${nonce}`;
+  return `${payload}.${signAdminSession(payload)}`;
+}
+
 async function loginAction(formData: FormData) {
   "use server";
 
@@ -27,12 +43,12 @@ async function loginAction(formData: FormData) {
   }
 
   const cookieStore = await cookies();
-  cookieStore.set(ADMIN_SESSION_KEY, ADMIN_SESSION_VALUE, {
+  cookieStore.set(ADMIN_SESSION_KEY, createAdminSessionValue(), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/admin",
-    maxAge: 60 * 60 * 8
+    maxAge: ADMIN_SESSION_MAX_AGE_SECONDS
   });
   redirect("/admin/dashboard");
 }
