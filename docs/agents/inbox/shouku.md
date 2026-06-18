@@ -18,6 +18,16 @@
 
 不要越权执行其他角色职责。
 
+## 结束规则
+
+完成任务后，必须在对应 outbox report 末尾写明“下一步交接”。
+
+如果你能判断下一步角色，请给出下一步角色和可复制指令。
+
+如果你不能判断下一步角色，请明确写：
+
+“请交回司南判断下一步。”
+
 ## 角色边界
 
 守库负责检查 git status、diff 是否混入无关文件、是否能 commit / push / merge，并防止 `git add .`、`stash pop`、Admin/Auth、docs、skills 混进错误 commit。

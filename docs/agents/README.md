@@ -37,3 +37,23 @@ It does not make ChatGPT or Codex windows communicate automatically. Instead, ea
 - Do not let a role execute another role's responsibilities without explicit permission.
 - Do not merge, force push, reset, clean, or stash pop through this workflow.
 - Codex may only commit and push when the user's current Git rules allow it.
+
+## Handoff Routing Rules
+
+Every role must end its outbox report with a `下一步交接` section.
+
+The section must tell the user which role should work next and why. It must also include a short instruction that the user can copy directly into the next role window.
+
+If the role cannot confidently decide the next role, it must hand the task back to 司南. 司南 should then read `current-goal.md`, `decision-log.md`, and all relevant outbox reports before assigning the next task.
+
+Default routing:
+
+- 造物完成 Builder 检查后，通常交给守库或司南。
+- 守库完成 PR 安全检查后，通常交给墨衡或司南。
+- 墨衡完成代码质量检查后，通常交给霓渊或司南。
+- 霓渊完成视觉检查后，通常交给司南做最终合并判断。
+- 观澜完成数据源规划后，通常交给司南或 Codex。
+- Codex 完成执行任务后，通常交给守库。
+- 不确定时，一律交回司南。
+
+An outbox report cannot only say "done". It must explain the next step clearly.
