@@ -1,16 +1,11 @@
-"use client";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { isAdminLoggedIn } from "@/lib/cms-store";
+const ADMIN_SESSION_KEY = "chain-radar-admin-session";
+const ADMIN_SESSION_VALUE = "active";
 
-export default function AdminIndex() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace(isAdminLoggedIn() ? "/admin/dashboard" : "/admin/login");
-  }, [router]);
-
-  return <main className="min-h-screen bg-[#050505]" />;
+export default async function AdminIndex() {
+  const cookieStore = await cookies();
+  const isAdminSessionActive = cookieStore.get(ADMIN_SESSION_KEY)?.value === ADMIN_SESSION_VALUE;
+  redirect(isAdminSessionActive ? "/admin/dashboard" : "/admin/login");
 }
-

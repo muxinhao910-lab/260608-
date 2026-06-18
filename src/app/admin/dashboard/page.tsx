@@ -1,13 +1,10 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   createId,
   defaultSiteData,
-  isAdminLoggedIn,
   isValidUrl,
-  setAdminLoggedIn,
   type CompanyRecord,
   type CredibilityRuleRecord,
   type InfoCardRecord,
@@ -36,16 +33,9 @@ const infoTypes: InfoCardType[] = ["客户", "订单", "收入占比", "毛利�
 const sourceTypes: SourceType[] = ["exchange_report", "ir_record", "interactive_reply", "broker_report", "finance_media", "social_media", "forum_rumor"];
 
 export default function AdminDashboard() {
-  const router = useRouter();
   const { data, update, reset } = useSiteDataStore();
   const [tab, setTab] = useState<AdminTab>("home");
   const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    if (!isAdminLoggedIn()) {
-      router.replace("/admin/login");
-    }
-  }, [router]);
 
   function save(next: SiteData, text = "已保存") {
     update(next);
@@ -54,8 +44,7 @@ export default function AdminDashboard() {
   }
 
   function logout() {
-    setAdminLoggedIn(false);
-    router.push("/admin/login");
+    window.location.assign("/admin/login");
   }
 
   return (
