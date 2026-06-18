@@ -57,3 +57,18 @@ Default routing:
 - 不确定时，一律交回司南。
 
 An outbox report cannot only say "done". It must explain the next step clearly.
+
+## User Action Rules
+
+Every outbox report must include a `需要用户执行` section when the current task needs the user to decide, copy, confirm, manually verify, or forward instructions to another role.
+
+This section must be separate from long analysis so the user can copy the next action without extracting text manually.
+
+The section should include:
+
+- `用户需要决定`: what decision the user must make.
+- `用户需要复制给谁`: which role or place should receive the next instruction.
+- `可直接复制的指令`: a complete copy-ready instruction block.
+- `如果用户不确定`: tell the user to send it back to 司南.
+
+If no user action is needed, write `暂无。` clearly instead of omitting the section.
