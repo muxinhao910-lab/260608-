@@ -7,6 +7,7 @@ import { RobotRadarModel } from "@/components/RobotRadarModel";
 import {
   type CompanyRecord,
   type InfoCardRecord,
+  type SectorRecord,
   useSiteDataStore
 } from "@/lib/cms-store";
 import { sourceTypeLabels, type ChainSegment } from "@/lib/radar-data";
@@ -21,8 +22,11 @@ const stageStyles: Record<CompanyRecord["currentStage"], string> = {
 export default function SectorPage() {
   const params = useParams<{ slug: string }>();
   const { data } = useSiteDataStore();
-  const sector = data.sectors.find((item) => item.slug === params.slug) ?? data.sectors[0];
-  const sectorCompanies = data.companies.filter((company) => company.sectorId === sector.id);
+  const slug = params.slug;
+  const requestedSector = data.sectors.find((item) => item.slug === slug);
+  const sector = requestedSector ?? data.sectors[0];
+  const isRoboticsSector = requestedSector?.id === "robotics";
+  const sectorCompanies = isRoboticsSector ? data.companies.filter((company) => company.sectorId === sector.id) : [];
   const [query, setQuery] = useState("");
   const [activeCode, setActiveCode] = useState(sectorCompanies[0]?.stockCode ?? "");
   const [activeSegment, setActiveSegment] = useState<ChainSegment | "全部">("全部");
@@ -60,6 +64,14 @@ export default function SectorPage() {
       setActiveCode(searchedCompanies[0].stockCode);
     }
   }, [searchedCompanies]);
+
+  if (!requestedSector) {
+    return <SectorPlaceholder sector={undefined} slug={slug} />;
+  }
+
+  if (sector.id !== "robotics") {
+    return <SectorPlaceholder sector={sector} slug={slug} />;
+  }
 
   if (sector.id !== "robotics") {
     return (
@@ -151,6 +163,28 @@ function TopBar() {
       <Link className="hover:text-[#f36b21]" href="/">CHAIN RADAR</Link>
       <Link className="hover:text-[#f36b21]" href="/admin/dashboard">ADMIN</Link>
     </div>
+  );
+}
+
+function SectorPlaceholder({ sector, slug }: { sector?: SectorRecord; slug: string }) {
+  return (
+    <main className="min-h-screen bg-[#070707] px-5 py-8 text-white md:px-10" data-review-page={`sector-${slug}`}>
+      <TopBar />
+      <section className="mx-auto grid min-h-[78vh] max-w-7xl place-items-center">
+        <div className="w-full border-2 border-white/20 bg-white/[.06] p-6 shadow-[0_0_80px_rgba(243,107,33,.18)] md:p-10">
+          <p className="font-mono text-xs uppercase tracking-normal text-[#f36b21]">reserved sector / slug: {slug}</p>
+          <h1 className="mt-5 font-serif text-[14vw] font-black leading-[.8] tracking-normal md:text-[104px]">
+            {sector ? `${sector.number}${sector.title}` : "Reserved Sector"}
+          </h1>
+          <p className="mt-8 max-w-3xl text-xl leading-relaxed text-white/72">
+            {sector?.summary ?? "This sector route exists as a Phase 0 placeholder. Detailed content can be added later from Admin data."}
+          </p>
+          <Link className="mt-10 inline-block border border-[#f36b21] px-5 py-3 font-mono text-xs uppercase tracking-normal text-[#f36b21] hover:bg-[#f36b21] hover:text-black" href="/">
+            Back home
+          </Link>
+        </div>
+      </section>
+    </main>
   );
 }
 

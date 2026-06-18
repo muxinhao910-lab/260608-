@@ -54,6 +54,7 @@ export function WebBuilderProvider({ children }: { children: ReactNode }) {
     setPages(getStoredPages());
     if (new URLSearchParams(window.location.search).get("builder") === "1") {
       setIsBuilderOpen(true);
+      setStatus("开发者模式已打开。");
     }
   }, []);
 
@@ -91,7 +92,10 @@ export function WebBuilderProvider({ children }: { children: ReactNode }) {
       selectedElement,
       isBuilderOpen,
       status,
-      openBuilder: () => setIsBuilderOpen(true),
+      openBuilder: () => {
+        setIsBuilderOpen(true);
+        setStatus("开发者模式已打开。");
+      },
       closeBuilder: () => {
         setIsBuilderOpen(false);
         setSelectedId(null);

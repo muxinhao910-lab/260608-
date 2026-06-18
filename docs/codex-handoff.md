@@ -1,70 +1,68 @@
 # Codex Handoff Report
 
 ## Repository
+GitHub repo URL:
+https://github.com/muxinhao910-lab/260608-
 
-* GitHub repo URL: Not uploaded yet. GitHub CLI `gh` is not installed or not available in PATH on this machine.
-* Current branch: `rollback/20260609-1808-20260609-1241-before-change`
-* Main branch: `main`
-* Working branch: `codex/phase0-function-fix` planned, not created yet because `main` has not been pushed to GitHub.
-
-## Current Project State
-
-* Framework: Next.js 16 / React 19 / TypeScript / Tailwind CSS
-* Package manager: npm
-* Key scripts:
-  * `npm run dev`
-  * `npm run build`
-  * `npm run start`
-  * `npm run checkpoint`
-  * `npm run history`
-  * `npm run rollback:last`
-  * `npm run diff:last`
-* Current known problems:
-  * 首页 4 个板块只有第一个能点击
-  * 右下角开发者模式点击无反应
-  * Admin 菜单和内部 tab 多数不可用
-  * Builder 功能尚未稳定
-  * 首页滑动动效暂时不优先
+## Branches
+- 当前本地分支：`codex/phase0-function-fix`
+- 当前最新代码来源：`rollback/20260609-1808-20260609-1241-before-change`
+- 正式工作分支：`codex/phase0-function-fix`
+- main 状态：`main` 目前不是最新开发状态，暂时不要基于 `main` 修复。
+- rollback 分支状态：`rollback/20260609-1808-20260609-1241-before-change` 保留为最新代码来源，不删除。
 
 ## Git Status
+本报告会在 Phase 0 修改后随代码状态一起更新。当前工作应继续保持在 `codex/phase0-function-fix`，不要直接修改 `main`。
 
-```text
-## rollback/20260609-1808-20260609-1241-before-change
-```
+## Phase 0 Starting Problems
+1. 首页 4 个板块只有第一个能点击。
+2. 右下角开发者模式点击无反应。
+3. Admin 菜单和内部 tab 多数不可用。
+4. Builder 功能尚未稳定。
+5. 首页滑动动效暂时不优先。
 
-## Recent Commits
+## Phase 0 Status In This Branch
+- 首页 4 个产业入口已改回直接链接跳转。
+- `/sector/semiconductor`、`/sector/ai`、`/sector/optical` 有最小占位页承接。
+- 右下角开发者模式入口是全局真实链接，首页和板块详情页都会显示，点击进入 `/admin/dashboard`。
+- Admin 在开发环境可直接进入并切换左侧菜单与 dashboard 内部 tab。
+- 未恢复首页滑动动效，未继续 Builder Phase 2 / 3。
 
-```text
-bcbdfba chore: upload current website state before further fixes
-5e41d0d checkpoint/20260610-0908-before-change
-19201eb checkpoint/20260610-0758-before-change
-dde1de7 docs: add new window handoff summary
-ac42195 fix: replace robotics radar with image hover stage
-```
+## Phase 0 Scope
+只做基础功能止血：
+1. 修复首页 4 个模块跳转。
+2. 修复开发者模式按钮。
+3. 修复 Admin 菜单和 tab。
+4. 明确 Admin 和 Builder 分工。
+5. 不恢复首页滑动动效。
+6. 不继续做复杂 Builder Phase 2 / 3。
 
-## Files Changed In This Setup
+## Admin And Builder Responsibility Split
+Builder / 开发者模式负责：
+- 页面视觉布局
+- 添加基础组件
+- 拖动位置
+- 缩放尺寸
+- 编辑按钮、文字、图片
+- 创建页面画布
+- 调整页面结构
 
-* `.gitignore`: added the required ignore rules for build output, environment files, reports, logs, and test artifacts.
-* `docs/codex-handoff.md`: added this handoff report.
+Admin 后台负责：
+- 内容数据管理
+- 首页文字
+- 产业板块数据
+- 公司资料
+- 信息卡片数据
+- 可信度规则
+- 后续接 Supabase 或本地数据
 
-The local checkpoint commit also preserved the full current website state that already existed before this GitHub setup task.
-
-## How To Review With ChatGPT
-
-1. After the repository is uploaded, send the GitHub repository link to ChatGPT.
-2. Send this handoff report to ChatGPT.
-3. For future Codex changes, create a separate branch for each task.
-4. Do not make large direct changes on `main`.
+Admin 不做拖拽页面搭建。
+Builder 不做长期股票/产业链数据维护。
 
 ## Next Recommended Task
+Phase 0 验收后，再决定是否进入下一阶段。不要在 Phase 0 中恢复首页动效，也不要继续 Builder Phase 2 / 3。
 
-Phase 0 only:
-
-* 修复首页 4 个模块跳转
-* 修复开发者模式按钮
-* 修复 Admin 菜单和 tab
-* 暂时不要恢复动效
-
-## Upload Blocker
-
-GitHub upload was not completed because `gh` is not installed or not available in PATH. Install GitHub CLI, then run `gh auth login` outside Codex. Do not paste tokens, passwords, cookies, or secrets into Codex.
+## Review Workflow
+1. 后续每次 Codex 修改都在 `codex/*` 独立分支进行。
+2. 不要直接在 `main` 上大改。
+3. 每次修改完成后，把 GitHub 分支链接、diff 或 PR 链接，以及本报告发给 ChatGPT 审查。
