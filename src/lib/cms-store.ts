@@ -93,12 +93,10 @@ export type SiteData = {
 };
 
 const STORE_KEY = "chain-radar-cms-v1";
-const AUTH_KEY = "chain-radar-admin-auth";
-
-export const adminCredential = {
-  username: "admin",
-  password: "radar123"
-};
+const ADMIN_SESSION_KEY = "chain-radar-admin-session";
+const ADMIN_SESSION_VALUE = "active";
+const ADMIN_USERNAME = process.env.NEXT_PUBLIC_CHAIN_RADAR_ADMIN_USER ?? "";
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_CHAIN_RADAR_ADMIN_PASSWORD ?? "";
 
 const robotSectorId = "robotics";
 
@@ -241,9 +239,7 @@ export function isAdminLoggedIn() {
   if (typeof window === "undefined") {
     return false;
   }
-  const local = window.localStorage?.getItem(AUTH_KEY) === "true";
-  const cookie = document.cookie.split(";").some((item) => item.trim() === `${AUTH_KEY}=true`);
-  return local || cookie;
+  return window.localStorage?.getItem(ADMIN_SESSION_KEY) === ADMIN_SESSION_VALUE;
 }
 
 export function setAdminLoggedIn(value: boolean) {
@@ -251,12 +247,21 @@ export function setAdminLoggedIn(value: boolean) {
     return;
   }
   if (value) {
-    window.localStorage?.setItem(AUTH_KEY, "true");
-    document.cookie = `${AUTH_KEY}=true; path=/; max-age=86400; SameSite=Lax`;
+    window.localStorage?.setItem(ADMIN_SESSION_KEY, ADMIN_SESSION_VALUE);
   } else {
-    window.localStorage?.removeItem(AUTH_KEY);
-    document.cookie = `${AUTH_KEY}=; path=/; max-age=0; SameSite=Lax`;
+    window.localStorage?.removeItem(ADMIN_SESSION_KEY);
   }
+}
+
+export function isAdminAuthConfigured() {
+  return Boolean(ADMIN_USERNAME && ADMIN_PASSWORD);
+}
+
+export function validateAdminCredentials(username: string, password: string) {
+  if (!isAdminAuthConfigured()) {
+    return false;
+  }
+  return username.trim() === ADMIN_USERNAME && password === ADMIN_PASSWORD;
 }
 
 export function isValidUrl(value: string) {
