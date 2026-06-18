@@ -231,14 +231,6 @@ export function resetSiteData() {
   saveSiteData(cloneDefault());
 }
 
-export function isAdminLoggedIn() {
-  return false;
-}
-
-export function setAdminLoggedIn(value: boolean) {
-  void value;
-}
-
 export function isValidUrl(value: string) {
   try {
     const parsed = new URL(value);

@@ -6,6 +6,7 @@ const cmsStore = readFileSync("src/lib/cms-store.ts", "utf8");
 const loginPage = readFileSync("src/app/admin/login/page.tsx", "utf8");
 const adminIndexPage = readFileSync("src/app/admin/page.tsx", "utf8");
 const adminDashboardPage = readFileSync("src/app/admin/dashboard/page.tsx", "utf8");
+const adminDashboardClient = readFileSync("src/app/admin/dashboard/DashboardClient.tsx", "utf8");
 
 test("admin auth baseline does not keep hardcoded default credentials", () => {
   assert.equal(cmsStore.includes("adminCredential"), false);
@@ -26,6 +27,7 @@ test("admin auth baseline keeps credentials out of the client bundle", () => {
 
 test("admin auth baseline does not allow client-side forged login", () => {
   assert.equal(/function\s+isAdminLoggedIn\s*\([^)]*\)\s*{[^}]*return\s+true\s*;/s.test(cmsStore), false);
+  assert.equal(/function\s+isAdminLoggedIn\s*\([^)]*\)\s*{[^}]*return\s+false\s*;/s.test(cmsStore), false);
   assert.equal(/function\s+isAdminLoggedIn\s*\([^)]*\)\s*{[^}]*localStorage/s.test(cmsStore), false);
   assert.equal(/function\s+setAdminLoggedIn\s*\([^)]*\)\s*{[^}]*localStorage/s.test(cmsStore), false);
   assert.equal(loginPage.includes("setAdminLoggedIn"), false);
@@ -42,7 +44,16 @@ test("admin entry uses server cookie routing", () => {
 });
 
 test("admin dashboard no longer kicks out authenticated users with client storage checks", () => {
+  assert.equal(adminDashboardPage.includes('"use client"'), false);
+  assert.match(adminDashboardPage, /cookies/);
+  assert.match(adminDashboardPage, /chain-radar-admin-session/);
+  assert.match(adminDashboardPage, /redirect\("\/admin\/login"\)/);
+  assert.match(adminDashboardPage, /logoutAction/);
+  assert.match(adminDashboardPage, /cookieStore\.delete\(ADMIN_SESSION_KEY\)/);
   assert.equal(adminDashboardPage.includes("isAdminLoggedIn"), false);
   assert.equal(adminDashboardPage.includes("setAdminLoggedIn"), false);
-  assert.equal(adminDashboardPage.includes('router.replace("/admin/login")'), false);
+  assert.equal(adminDashboardClient.includes("isAdminLoggedIn"), false);
+  assert.equal(adminDashboardClient.includes("setAdminLoggedIn"), false);
+  assert.equal(adminDashboardClient.includes('router.replace("/admin/login")'), false);
+  assert.match(adminDashboardClient, /action=\{logoutAction\}/);
 });
