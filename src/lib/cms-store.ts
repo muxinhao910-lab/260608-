@@ -93,10 +93,6 @@ export type SiteData = {
 };
 
 const STORE_KEY = "chain-radar-cms-v1";
-const ADMIN_SESSION_KEY = "chain-radar-admin-session";
-const ADMIN_SESSION_VALUE = "active";
-const ADMIN_USERNAME = process.env.NEXT_PUBLIC_CHAIN_RADAR_ADMIN_USER ?? "";
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_CHAIN_RADAR_ADMIN_PASSWORD ?? "";
 
 const robotSectorId = "robotics";
 
@@ -236,32 +232,11 @@ export function resetSiteData() {
 }
 
 export function isAdminLoggedIn() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-  return window.localStorage?.getItem(ADMIN_SESSION_KEY) === ADMIN_SESSION_VALUE;
+  return false;
 }
 
 export function setAdminLoggedIn(value: boolean) {
-  if (typeof window === "undefined") {
-    return;
-  }
-  if (value) {
-    window.localStorage?.setItem(ADMIN_SESSION_KEY, ADMIN_SESSION_VALUE);
-  } else {
-    window.localStorage?.removeItem(ADMIN_SESSION_KEY);
-  }
-}
-
-export function isAdminAuthConfigured() {
-  return Boolean(ADMIN_USERNAME && ADMIN_PASSWORD);
-}
-
-export function validateAdminCredentials(username: string, password: string) {
-  if (!isAdminAuthConfigured()) {
-    return false;
-  }
-  return username.trim() === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+  void value;
 }
 
 export function isValidUrl(value: string) {

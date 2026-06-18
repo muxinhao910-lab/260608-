@@ -12,9 +12,22 @@ test("admin auth baseline does not keep hardcoded default credentials", () => {
   assert.equal(loginPage.includes("radar123"), false);
 });
 
-test("admin auth baseline does not allow unconditional login", () => {
+test("admin auth baseline keeps credentials out of the client bundle", () => {
+  assert.equal(cmsStore.includes("NEXT_PUBLIC_CHAIN_RADAR_ADMIN_USER"), false);
+  assert.equal(cmsStore.includes("NEXT_PUBLIC_CHAIN_RADAR_ADMIN_PASSWORD"), false);
+  assert.equal(loginPage.includes("NEXT_PUBLIC_CHAIN_RADAR_ADMIN_USER"), false);
+  assert.equal(loginPage.includes("NEXT_PUBLIC_CHAIN_RADAR_ADMIN_PASSWORD"), false);
+  assert.match(loginPage, /CHAIN_RADAR_ADMIN_USER/);
+  assert.match(loginPage, /CHAIN_RADAR_ADMIN_PASSWORD/);
+  assert.match(loginPage, /"use server"/);
+});
+
+test("admin auth baseline does not allow client-side forged login", () => {
   assert.equal(/function\s+isAdminLoggedIn\s*\([^)]*\)\s*{[^}]*return\s+true\s*;/s.test(cmsStore), false);
-  assert.match(cmsStore, /NEXT_PUBLIC_CHAIN_RADAR_ADMIN_USER/);
-  assert.match(cmsStore, /NEXT_PUBLIC_CHAIN_RADAR_ADMIN_PASSWORD/);
-  assert.match(cmsStore, /validateAdminCredentials/);
+  assert.equal(/function\s+isAdminLoggedIn\s*\([^)]*\)\s*{[^}]*localStorage/s.test(cmsStore), false);
+  assert.equal(/function\s+setAdminLoggedIn\s*\([^)]*\)\s*{[^}]*localStorage/s.test(cmsStore), false);
+  assert.equal(loginPage.includes("setAdminLoggedIn"), false);
+  assert.equal(loginPage.includes("useState"), false);
+  assert.equal(loginPage.includes("useRouter"), false);
+  assert.match(loginPage, /httpOnly:\s*true/);
 });
