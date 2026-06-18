@@ -93,12 +93,6 @@ export type SiteData = {
 };
 
 const STORE_KEY = "chain-radar-cms-v1";
-const AUTH_KEY = "chain-radar-admin-auth";
-
-export const adminCredential = {
-  username: "admin",
-  password: "radar123"
-};
 
 const robotSectorId = "robotics";
 
@@ -235,28 +229,6 @@ export function saveSiteData(data: SiteData) {
 
 export function resetSiteData() {
   saveSiteData(cloneDefault());
-}
-
-export function isAdminLoggedIn() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-  const local = window.localStorage?.getItem(AUTH_KEY) === "true";
-  const cookie = document.cookie.split(";").some((item) => item.trim() === `${AUTH_KEY}=true`);
-  return local || cookie;
-}
-
-export function setAdminLoggedIn(value: boolean) {
-  if (typeof window === "undefined") {
-    return;
-  }
-  if (value) {
-    window.localStorage?.setItem(AUTH_KEY, "true");
-    document.cookie = `${AUTH_KEY}=true; path=/; max-age=86400; SameSite=Lax`;
-  } else {
-    window.localStorage?.removeItem(AUTH_KEY);
-    document.cookie = `${AUTH_KEY}=; path=/; max-age=0; SameSite=Lax`;
-  }
 }
 
 export function isValidUrl(value: string) {
