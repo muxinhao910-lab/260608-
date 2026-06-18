@@ -92,12 +92,24 @@ export type SiteData = {
   credibilityRules: CredibilityRuleRecord[];
 };
 
+export type PageBlock =
+  | { id: string; type: "heading"; text: string; level: 1 | 2 | 3 }
+  | { id: string; type: "paragraph"; text: string }
+  | { id: string; type: "button"; text: string; href: string }
+  | { id: string; type: "banner"; title: string; subtitle: string }
+  | { id: string; type: "card"; title: string; description: string }
+  | { id: string; type: "sector-card"; title: string; description: string; href: string }
+  | { id: string; type: "divider" };
+
+export type PageBlockType = PageBlock["type"];
+
 const STORE_KEY = "chain-radar-cms-v1";
-const AUTH_KEY = "chain-radar-admin-auth";
+const PAGE_BUILDER_BLOCKS_KEY = "chain-radar-page-builder-blocks-v1";
+const ADMIN_SESSION_KEY = "chain-radar-admin-session";
 
 export const adminCredential = {
   username: "admin",
-  password: "radar123"
+  password: "radar123",
 };
 
 const robotSectorId = "robotics";
@@ -140,12 +152,12 @@ export const defaultSiteData: SiteData = {
       status: "reserved"
     },
     {
-      id: "optical-module",
+      id: "optical",
       order: 4,
       number: "04",
       title: "光模块板块",
-      slug: "optical-module",
-      path: "/sector/optical-module",
+      slug: "optical",
+      path: "/sector/optical",
       summary: "光芯片、光器件、光模块、交换机链条，后续扩展为光通信研究雷达。",
       status: "reserved"
     }
@@ -199,8 +211,49 @@ export const defaultSiteData: SiteData = {
   }))
 };
 
+export const defaultPageBlocks: PageBlock[] = [
+  {
+    id: "builder-default-banner",
+    type: "banner",
+    title: "个人网站视觉编辑器",
+    subtitle: "从左侧添加组件，在中间预览，并在右侧编辑属性。"
+  },
+  {
+    id: "builder-default-heading",
+    type: "heading",
+    text: "产业链研究首页草稿",
+    level: 1
+  },
+  {
+    id: "builder-default-paragraph",
+    type: "paragraph",
+    text: "这里保存的是 Builder 独立草稿，本轮不会覆盖正式首页。"
+  }
+];
+
+function normalizeSiteData(data: SiteData): SiteData {
+  return {
+    ...data,
+    sectors: data.sectors.map((sector) => {
+      if (sector.id === "optical-module" || sector.slug === "optical-module" || sector.number === "04") {
+        return { ...sector, id: sector.id === "optical-module" ? "optical" : sector.id, slug: "optical", path: "/sector/optical" };
+      }
+      if (sector.id === "robotics" || sector.slug === "robotics" || sector.number === "01") {
+        return { ...sector, slug: "robotics", path: "/sector/robotics" };
+      }
+      if (sector.id === "semiconductor" || sector.slug === "semiconductor" || sector.number === "02") {
+        return { ...sector, slug: "semiconductor", path: "/sector/semiconductor" };
+      }
+      if (sector.id === "ai" || sector.slug === "ai" || sector.number === "03") {
+        return { ...sector, slug: "ai", path: "/sector/ai" };
+      }
+      return sector;
+    })
+  };
+}
+
 function cloneDefault(): SiteData {
-  return JSON.parse(JSON.stringify(defaultSiteData)) as SiteData;
+  return normalizeSiteData(JSON.parse(JSON.stringify(defaultSiteData)) as SiteData);
 }
 
 export function getSiteData(): SiteData {
@@ -217,7 +270,7 @@ export function getSiteData(): SiteData {
     return seeded;
   }
   try {
-    return JSON.parse(raw) as SiteData;
+    return normalizeSiteData(JSON.parse(raw) as SiteData);
   } catch {
     const seeded = cloneDefault();
     window.localStorage.setItem(STORE_KEY, JSON.stringify(seeded));
@@ -238,25 +291,21 @@ export function resetSiteData() {
 }
 
 export function isAdminLoggedIn() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-  const local = window.localStorage?.getItem(AUTH_KEY) === "true";
-  const cookie = document.cookie.split(";").some((item) => item.trim() === `${AUTH_KEY}=true`);
-  return local || cookie;
+  return true;
 }
 
-export function setAdminLoggedIn(value: boolean) {
+export function setAdminLoggedIn(value = true) {
   if (typeof window === "undefined") {
     return;
   }
+
   if (value) {
-    window.localStorage?.setItem(AUTH_KEY, "true");
-    document.cookie = `${AUTH_KEY}=true; path=/; max-age=86400; SameSite=Lax`;
-  } else {
-    window.localStorage?.removeItem(AUTH_KEY);
-    document.cookie = `${AUTH_KEY}=; path=/; max-age=0; SameSite=Lax`;
+    window.localStorage.setItem(ADMIN_SESSION_KEY, "1");
+    return;
   }
+
+  window.localStorage.removeItem(ADMIN_SESSION_KEY);
+  window.location.assign("/admin/logout");
 }
 
 export function isValidUrl(value: string) {
@@ -270,6 +319,118 @@ export function isValidUrl(value: string) {
 
 export function createId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+}
+
+function cloneDefaultPageBlocks(): PageBlock[] {
+  return JSON.parse(JSON.stringify(defaultPageBlocks)) as PageBlock[];
+}
+
+function normalizePageBlock(value: unknown): PageBlock | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const block = value as Partial<PageBlock>;
+  if (typeof block.id !== "string" || typeof block.type !== "string") {
+    return null;
+  }
+
+  switch (block.type) {
+    case "heading": {
+      const level = block.level === 1 || block.level === 2 || block.level === 3 ? block.level : 2;
+      return { id: block.id, type: "heading", text: typeof block.text === "string" ? block.text : "新标题", level };
+    }
+    case "paragraph":
+      return { id: block.id, type: "paragraph", text: typeof block.text === "string" ? block.text : "新段落文字" };
+    case "button":
+      return {
+        id: block.id,
+        type: "button",
+        text: typeof block.text === "string" ? block.text : "查看详情",
+        href: typeof block.href === "string" ? block.href : "#"
+      };
+    case "banner":
+      return {
+        id: block.id,
+        type: "banner",
+        title: typeof block.title === "string" ? block.title : "条幅标题",
+        subtitle: typeof block.subtitle === "string" ? block.subtitle : "条幅副标题"
+      };
+    case "card":
+      return {
+        id: block.id,
+        type: "card",
+        title: typeof block.title === "string" ? block.title : "信息卡片",
+        description: typeof block.description === "string" ? block.description : "卡片描述"
+      };
+    case "sector-card":
+      return {
+        id: block.id,
+        type: "sector-card",
+        title: typeof block.title === "string" ? block.title : "板块入口",
+        description: typeof block.description === "string" ? block.description : "板块说明",
+        href: typeof block.href === "string" ? block.href : "/sector/robotics"
+      };
+    case "divider":
+      return { id: block.id, type: "divider" };
+    default:
+      return null;
+  }
+}
+
+export function getPageBuilderBlocks(): PageBlock[] {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return cloneDefaultPageBlocks();
+  }
+
+  const raw = window.localStorage.getItem(PAGE_BUILDER_BLOCKS_KEY);
+  if (!raw) {
+    return cloneDefaultPageBlocks();
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return cloneDefaultPageBlocks();
+    }
+    const blocks = parsed.map(normalizePageBlock).filter((block): block is PageBlock => Boolean(block));
+    return blocks.length ? blocks : cloneDefaultPageBlocks();
+  } catch {
+    return cloneDefaultPageBlocks();
+  }
+}
+
+export function savePageBuilderBlocks(blocks: PageBlock[]) {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return;
+  }
+  window.localStorage.setItem(PAGE_BUILDER_BLOCKS_KEY, JSON.stringify(blocks));
+}
+
+export function resetPageBuilderBlocks() {
+  const blocks = cloneDefaultPageBlocks();
+  savePageBuilderBlocks(blocks);
+  return blocks;
+}
+
+export function createPageBlock(type: PageBlockType): PageBlock {
+  const id = createId(`builder-${type}`);
+  switch (type) {
+    case "heading":
+      return { id, type, text: "新标题", level: 2 };
+    case "paragraph":
+      return { id, type, text: "这里输入段落文字。" };
+    case "button":
+      return { id, type, text: "查看详情", href: "/" };
+    case "banner":
+      return { id, type, title: "条幅标题", subtitle: "这里输入条幅副标题。" };
+    case "card":
+      return { id, type, title: "信息卡片", description: "这里输入信息卡片描述。" };
+    case "sector-card":
+      return { id, type, title: "板块入口卡片", description: "点击进入对应产业板块。", href: "/sector/robotics" };
+    case "divider":
+      return { id, type };
+  }
 }
 
 export function useSiteDataStore() {
