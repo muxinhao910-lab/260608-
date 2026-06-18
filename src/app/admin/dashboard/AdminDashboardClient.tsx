@@ -32,7 +32,7 @@ const chainSegments: ChainSegment[] = ["关节与减速器", "丝杠与轴承", 
 const infoTypes: InfoCardType[] = ["客户", "订单", "收入占比", "毛利率", "产能", "宏观", "ETF", "行业价格"];
 const sourceTypes: SourceType[] = ["exchange_report", "ir_record", "interactive_reply", "broker_report", "finance_media", "social_media", "forum_rumor"];
 
-export default function AdminDashboard({ logoutAction }: { logoutAction: () => Promise<void> }) {
+export default function AdminDashboardClient() {
   const { data, update, reset } = useSiteDataStore();
   const [tab, setTab] = useState<AdminTab>("home");
   const [message, setMessage] = useState("");
@@ -53,9 +53,7 @@ export default function AdminDashboard({ logoutAction }: { logoutAction: () => P
           </div>
           <div className="flex gap-2">
             <a className="border border-white/20 px-4 py-3 font-mono text-xs uppercase tracking-normal hover:border-[#f36b21] hover:text-[#f36b21]" href="/">前台首页</a>
-            <form action={logoutAction}>
-              <button className="border border-white/20 px-4 py-3 font-mono text-xs uppercase tracking-normal hover:border-[#f36b21] hover:text-[#f36b21]" type="submit">退出</button>
-            </form>
+            <a className="border border-white/20 px-4 py-3 font-mono text-xs uppercase tracking-normal hover:border-[#f36b21] hover:text-[#f36b21]" href="/admin/logout">退出</a>
           </div>
         </header>
 

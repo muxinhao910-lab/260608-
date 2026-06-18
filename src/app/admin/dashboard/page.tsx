@@ -1,17 +1,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import AdminDashboard from "./DashboardClient";
+import AdminDashboardClient from "./AdminDashboardClient";
 
 const ADMIN_SESSION_KEY = "chain-radar-admin-session";
 const ADMIN_SESSION_VALUE = "active";
-
-async function logoutAction() {
-  "use server";
-
-  const cookieStore = await cookies();
-  cookieStore.delete(ADMIN_SESSION_KEY);
-  redirect("/admin/login");
-}
 
 export default async function AdminDashboardPage() {
   const cookieStore = await cookies();
@@ -21,5 +13,5 @@ export default async function AdminDashboardPage() {
     redirect("/admin/login");
   }
 
-  return <AdminDashboard logoutAction={logoutAction} />;
+  return <AdminDashboardClient />;
 }

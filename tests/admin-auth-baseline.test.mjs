@@ -6,7 +6,8 @@ const cmsStore = readFileSync("src/lib/cms-store.ts", "utf8");
 const loginPage = readFileSync("src/app/admin/login/page.tsx", "utf8");
 const adminIndexPage = readFileSync("src/app/admin/page.tsx", "utf8");
 const adminDashboardPage = readFileSync("src/app/admin/dashboard/page.tsx", "utf8");
-const adminDashboardClient = readFileSync("src/app/admin/dashboard/DashboardClient.tsx", "utf8");
+const adminDashboardClient = readFileSync("src/app/admin/dashboard/AdminDashboardClient.tsx", "utf8");
+const adminLogoutRoute = readFileSync("src/app/admin/logout/route.ts", "utf8");
 
 test("admin auth baseline does not keep hardcoded default credentials", () => {
   assert.equal(cmsStore.includes("adminCredential"), false);
@@ -47,13 +48,27 @@ test("admin dashboard no longer kicks out authenticated users with client storag
   assert.equal(adminDashboardPage.includes('"use client"'), false);
   assert.match(adminDashboardPage, /cookies/);
   assert.match(adminDashboardPage, /chain-radar-admin-session/);
+  assert.match(adminDashboardPage, /isAdminSessionActive/);
   assert.match(adminDashboardPage, /redirect\("\/admin\/login"\)/);
-  assert.match(adminDashboardPage, /logoutAction/);
-  assert.match(adminDashboardPage, /cookieStore\.delete\(ADMIN_SESSION_KEY\)/);
+  assert.match(adminDashboardPage, /AdminDashboardClient/);
+  assert.equal(adminDashboardPage.includes("logoutAction"), false);
+  assert.equal(adminDashboardPage.includes("cookieStore.delete"), false);
   assert.equal(adminDashboardPage.includes("isAdminLoggedIn"), false);
   assert.equal(adminDashboardPage.includes("setAdminLoggedIn"), false);
   assert.equal(adminDashboardClient.includes("isAdminLoggedIn"), false);
   assert.equal(adminDashboardClient.includes("setAdminLoggedIn"), false);
   assert.equal(adminDashboardClient.includes('router.replace("/admin/login")'), false);
-  assert.match(adminDashboardClient, /action=\{logoutAction\}/);
+  assert.match(adminDashboardClient, /href="\/admin\/logout"/);
+});
+
+test("admin logout route clears the httpOnly session cookie", () => {
+  assert.match(adminLogoutRoute, /NextResponse\.redirect/);
+  assert.match(adminLogoutRoute, /new URL\("\/admin\/login", request\.url\)/);
+  assert.match(adminLogoutRoute, /response\.cookies\.set\(ADMIN_SESSION_KEY,\s*""/);
+  assert.match(adminLogoutRoute, /chain-radar-admin-session/);
+  assert.match(adminLogoutRoute, /httpOnly:\s*true/);
+  assert.match(adminLogoutRoute, /path:\s*"\/admin"/);
+  assert.match(adminLogoutRoute, /maxAge:\s*0/);
+  assert.equal(adminLogoutRoute.includes('"use client"'), false);
+  assert.equal(adminLogoutRoute.includes("localStorage"), false);
 });
