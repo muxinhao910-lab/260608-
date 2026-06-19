@@ -60,39 +60,40 @@ export function HomeEditShell() {
   }
 
   function save() {
-    try {
-      saveHomeEditorState(state);
+    if (saveHomeEditorState(state)) {
       setMessage("已保存到本地，刷新首页后仍会保留");
-    } catch {
-      setMessage("保存失败，请检查浏览器 localStorage 权限");
+      return;
     }
+    setMessage("保存失败，请检查浏览器 localStorage 权限");
   }
 
   return (
     <>
-      <section className="pointer-events-none fixed inset-x-4 bottom-24 z-[80] mx-auto max-w-4xl md:bottom-8">
-        <div className="pointer-events-auto grid gap-3">
-          {state.modules.map((module) => (
-            <button
-              aria-pressed={selectedId === module.id}
-              className={`border p-4 text-left shadow-[8px_8px_0_rgba(17,17,17,.75)] transition ${
-                selectedId === module.id
-                  ? "border-[#f36b21] bg-[#f36b21] text-black"
-                  : "border-white/20 bg-black/75 text-white hover:border-[#f36b21]"
-              }`}
-              key={module.id}
-              onClick={() => {
-                setSelectedId(module.id);
-                setIsEditing(true);
-              }}
-              type="button"
-            >
-              <span className="mb-2 block font-mono text-[11px] uppercase tracking-normal opacity-70">{moduleLabels[module.type]}</span>
-              <HomeEditorModulePreview module={module} />
-            </button>
-          ))}
-        </div>
-      </section>
+      {isEditing && state.modules.length > 0 ? (
+        <section className="pointer-events-none fixed inset-x-4 bottom-24 z-[80] mx-auto max-w-4xl md:bottom-8">
+          <div className="pointer-events-auto grid gap-3">
+            {state.modules.map((module) => (
+              <button
+                aria-pressed={selectedId === module.id}
+                className={`border p-4 text-left shadow-[8px_8px_0_rgba(17,17,17,.75)] transition ${
+                  selectedId === module.id
+                    ? "border-[#f36b21] bg-[#f36b21] text-black"
+                    : "border-white/20 bg-black/75 text-white hover:border-[#f36b21]"
+                }`}
+                key={module.id}
+                onClick={() => {
+                  setSelectedId(module.id);
+                  setIsEditing(true);
+                }}
+                type="button"
+              >
+                <span className="mb-2 block font-mono text-[11px] uppercase tracking-normal opacity-70">{moduleLabels[module.type]}</span>
+                <HomeEditorModulePreview module={module} />
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {isEditing ? (
         <aside className="fixed right-4 top-4 z-[100] w-[min(390px,calc(100vw-2rem))] border border-white/20 bg-[#050505]/95 p-4 text-white shadow-[0_0_80px_rgba(243,107,33,.22)]">

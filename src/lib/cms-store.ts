@@ -414,6 +414,28 @@ function cloneDefaultHomeEditorState(): HomeEditorState {
   return JSON.parse(JSON.stringify(defaultHomeEditorState)) as HomeEditorState;
 }
 
+function normalizeHomeEditorHref(value: unknown) {
+  if (typeof value !== "string") {
+    return "/";
+  }
+
+  const href = value.trim();
+  if (!href || /[\u0000-\u001f\u007f]/.test(href) || href.startsWith("//")) {
+    return "/";
+  }
+
+  if (href.startsWith("/")) {
+    return href;
+  }
+
+  try {
+    const parsed = new URL(href);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? href : "/";
+  } catch {
+    return "/";
+  }
+}
+
 function normalizeHomeEditorModule(value: unknown): HomeEditorModule | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return null;
@@ -432,7 +454,7 @@ function normalizeHomeEditorModule(value: unknown): HomeEditorModule | null {
         id: module.id,
         type: "button",
         text: typeof module.text === "string" ? module.text : "按钮",
-        href: typeof module.href === "string" ? module.href : "/"
+        href: normalizeHomeEditorHref(module.href)
       };
     case "decoration":
       return { id: module.id, type: "decoration", label: typeof module.label === "string" ? module.label : "装饰块" };
@@ -463,12 +485,11 @@ export function getHomeEditorState(): HomeEditorState {
     return cloneDefaultHomeEditorState();
   }
 
-  const raw = window.localStorage.getItem(HOME_EDITOR_STATE_KEY);
-  if (!raw) {
-    return cloneDefaultHomeEditorState();
-  }
-
   try {
+    const raw = window.localStorage.getItem(HOME_EDITOR_STATE_KEY);
+    if (!raw) {
+      return cloneDefaultHomeEditorState();
+    }
     return normalizeHomeEditorState(JSON.parse(raw));
   } catch {
     return cloneDefaultHomeEditorState();
@@ -477,9 +498,15 @@ export function getHomeEditorState(): HomeEditorState {
 
 export function saveHomeEditorState(state: HomeEditorState) {
   if (typeof window === "undefined" || !window.localStorage) {
-    return;
+    return false;
   }
-  window.localStorage.setItem(HOME_EDITOR_STATE_KEY, JSON.stringify(normalizeHomeEditorState(state)));
+
+  try {
+    window.localStorage.setItem(HOME_EDITOR_STATE_KEY, JSON.stringify(normalizeHomeEditorState(state)));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function createHomeEditorModule(type: HomeEditorModuleType): HomeEditorModule {
