@@ -105,6 +105,7 @@ export type PageBlockType = PageBlock["type"];
 
 const STORE_KEY = "chain-radar-cms-v1";
 const PAGE_BUILDER_BLOCKS_KEY = "chain-radar-page-builder-blocks-v1";
+const PUBLISHED_HOME_BLOCKS_KEY = "chain-radar-home-published-blocks-v1";
 
 const robotSectorId = "robotics";
 
@@ -355,11 +356,41 @@ export function getPageBuilderBlocks(): PageBlock[] {
   }
 }
 
+export function getPublishedHomeBlocks(): PageBlock[] | null {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return null;
+  }
+
+  const raw = window.localStorage.getItem(PUBLISHED_HOME_BLOCKS_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+    const blocks = parsed.map(normalizePageBlock).filter((block): block is PageBlock => Boolean(block));
+    return blocks.length ? blocks : null;
+  } catch {
+    return null;
+  }
+}
+
 export function savePageBuilderBlocks(blocks: PageBlock[]) {
   if (typeof window === "undefined" || !window.localStorage) {
     return;
   }
   window.localStorage.setItem(PAGE_BUILDER_BLOCKS_KEY, JSON.stringify(blocks));
+}
+
+export function publishHomeBlocks(blocks: PageBlock[]) {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return;
+  }
+  window.localStorage.setItem(PUBLISHED_HOME_BLOCKS_KEY, JSON.stringify(blocks));
+  window.dispatchEvent(new CustomEvent("chain-radar-home-published-change"));
 }
 
 export function resetPageBuilderBlocks() {

@@ -6,6 +6,7 @@ import {
   createPageBlock,
   defaultPageBlocks,
   getPageBuilderBlocks,
+  publishHomeBlocks,
   resetPageBuilderBlocks,
   savePageBuilderBlocks,
   type PageBlock,
@@ -142,9 +143,30 @@ export function PageBuilderEditor() {
       savePageBuilderBlocks(prepared.blocks);
       setBlocks(prepared.blocks);
       setFieldErrors({});
-      setMessage("独立草稿已保存到 localStorage；不会发布到正式首页。");
+      setMessage("草稿已保存。首页不会变化，除非点击发布到首页。");
     } catch {
       setMessage("保存失败：localStorage 写入失败，请检查浏览器存储权限后重试。");
+    }
+  }
+
+  function publishBlocks() {
+    const prepared = preparePageBuilderBlocksForSave(blocks);
+
+    if (!prepared.ok) {
+      setSelectedId(prepared.blockId);
+      setFieldErrors({ [prepared.blockId]: prepared.message });
+      setMessage(`发布失败：${prepared.message}`);
+      return;
+    }
+
+    try {
+      savePageBuilderBlocks(prepared.blocks);
+      publishHomeBlocks(prepared.blocks);
+      setBlocks(prepared.blocks);
+      setFieldErrors({});
+      setMessage("已发布到首页。刷新首页后仍会显示当前发布版本。");
+    } catch {
+      setMessage("发布失败：localStorage 写入失败，请检查浏览器存储权限后重试。");
     }
   }
 
@@ -157,7 +179,7 @@ export function PageBuilderEditor() {
       setBlocks(next);
       setSelectedId(next[0]?.id ?? "");
       setFieldErrors({});
-      setMessage("已重置为默认模块；当前仍是 Builder 独立草稿，未发布正式首页。");
+      setMessage("草稿已重置。已发布首页不会变化，除非再次点击发布到首页。");
     } catch {
       setMessage("保存失败：localStorage 写入失败，重置未完成。");
     }
@@ -169,12 +191,13 @@ export function PageBuilderEditor() {
         <div>
           <p>WEB BUILDER</p>
           <h1>网站组件编辑器</h1>
-          <p className="page-builder-muted">当前编辑内容是 Builder 独立草稿；保存不会发布到正式首页。</p>
+          <p className="page-builder-muted">当前编辑内容是 Builder 草稿；保存草稿不会影响首页，发布到首页后才会改变正式首页。</p>
         </div>
         <div className="page-builder-actions">
           {message ? <span>{message}</span> : null}
-          <button type="button" onClick={saveBlocks}>保存页面</button>
-          <button type="button" onClick={resetBlocks}>重置页面</button>
+          <button type="button" onClick={saveBlocks}>保存草稿</button>
+          <button type="button" onClick={publishBlocks}>发布到首页</button>
+          <button type="button" onClick={resetBlocks}>重置草稿</button>
           <Link href="/">返回首页</Link>
         </div>
       </header>

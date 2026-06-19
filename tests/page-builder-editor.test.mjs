@@ -64,6 +64,7 @@ function loadEditorExports() {
           getPageBuilderBlocks() {
             return [{ id: "default", type: "paragraph", text: "default" }];
           },
+          publishHomeBlocks() {},
           resetPageBuilderBlocks() {
             return [{ id: "default", type: "paragraph", text: "default" }];
           },

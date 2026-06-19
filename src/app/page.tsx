@@ -1,21 +1,37 @@
 "use client";
 
-import { useRef, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { type SectorRecord, useSiteDataStore } from "@/lib/cms-store";
+import { getPublishedHomeBlocks, type PageBlock, type SectorRecord, useSiteDataStore } from "@/lib/cms-store";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
   const rootRef = useRef<HTMLDivElement>(null);
   const { data } = useSiteDataStore();
+  const [publishedBlocks, setPublishedBlocks] = useState<PageBlock[] | null>(null);
   const sectors = [...data.sectors].sort((a, b) => a.order - b.order);
+
+  useEffect(() => {
+    const syncPublishedBlocks = () => setPublishedBlocks(getPublishedHomeBlocks());
+    syncPublishedBlocks();
+    window.addEventListener("storage", syncPublishedBlocks);
+    window.addEventListener("chain-radar-home-published-change", syncPublishedBlocks);
+    return () => {
+      window.removeEventListener("storage", syncPublishedBlocks);
+      window.removeEventListener("chain-radar-home-published-change", syncPublishedBlocks);
+    };
+  }, []);
 
   useGSAP(
     () => {
+      if (publishedBlocks) {
+        return;
+      }
+
       const mm = gsap.matchMedia();
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
@@ -84,7 +100,7 @@ export default function Home() {
 
       return () => mm.revert();
     },
-    { scope: rootRef, dependencies: [sectors.length] }
+    { scope: rootRef, dependencies: [sectors.length, publishedBlocks] }
   );
 
   function handleSectorClick(event: ReactMouseEvent<HTMLAnchorElement>, sector: SectorRecord) {
@@ -96,6 +112,10 @@ export default function Home() {
   }
 
   const titleLines = getTitleLines(data.home.title, data.home.subtitle);
+
+  if (publishedBlocks) {
+    return <PublishedHomeBlocks blocks={publishedBlocks} />;
+  }
 
   return (
     <main ref={rootRef} className="min-h-screen bg-[#f8f4ec] text-[#111111]">
@@ -199,6 +219,75 @@ export default function Home() {
       </section>
     </main>
   );
+}
+
+function PublishedHomeBlocks({ blocks }: { blocks: PageBlock[] }) {
+  return (
+    <main className="min-h-screen bg-[#050505] px-5 py-8 text-white md:px-10">
+      <section className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col justify-center gap-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/15 pb-4">
+          <p className="font-mono text-xs uppercase tracking-normal text-[#f36b21]">Published from Builder</p>
+          <a className="border border-white/20 px-4 py-2 font-mono text-xs uppercase tracking-normal hover:border-[#f36b21] hover:text-[#f36b21]" href="/admin/builder">
+            编辑草稿
+          </a>
+        </div>
+        <div className="grid gap-5">
+          {blocks.map((block) => (
+            <PublishedHomeBlock block={block} key={block.id} />
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function PublishedHomeBlock({ block }: { block: PageBlock }) {
+  switch (block.type) {
+    case "heading": {
+      const Tag = `h${block.level}` as "h1" | "h2" | "h3";
+      const className =
+        block.level === 1
+          ? "font-serif text-5xl font-black leading-none md:text-7xl"
+          : block.level === 2
+            ? "font-serif text-4xl font-black leading-tight md:text-5xl"
+            : "font-serif text-3xl font-black leading-tight";
+      return <Tag className={className}>{block.text}</Tag>;
+    }
+    case "paragraph":
+      return <p className="max-w-3xl text-lg leading-8 text-white/78">{block.text}</p>;
+    case "button":
+      return (
+        <p>
+          <a className="inline-flex border border-[#f36b21] bg-[#f36b21] px-5 py-3 font-mono text-xs uppercase tracking-normal text-black hover:bg-white" href={block.href}>
+            {block.text}
+          </a>
+        </p>
+      );
+    case "banner":
+      return (
+        <section className="border border-white/15 bg-white/[.06] p-6 shadow-[0_0_80px_rgba(243,107,33,.14)] md:p-8">
+          <h1 className="font-serif text-5xl font-black leading-none md:text-7xl">{block.title}</h1>
+          <p className="mt-5 max-w-3xl text-lg leading-8 text-white/75">{block.subtitle}</p>
+        </section>
+      );
+    case "card":
+      return (
+        <article className="border border-white/15 bg-white/[.045] p-5">
+          <h2 className="font-serif text-3xl font-black">{block.title}</h2>
+          <p className="mt-3 text-white/70">{block.description}</p>
+        </article>
+      );
+    case "sector-card":
+      return (
+        <a className="block border border-white/15 bg-white/[.045] p-5 hover:border-[#f36b21]" href={block.href}>
+          <h2 className="font-serif text-3xl font-black">{block.title}</h2>
+          <p className="mt-3 text-white/70">{block.description}</p>
+          <span className="mt-4 block font-mono text-xs text-[#f36b21]">{block.href}</span>
+        </a>
+      );
+    case "divider":
+      return <hr className="border-white/15" />;
+  }
 }
 
 function Caption({
