@@ -7,6 +7,7 @@ import vm from "node:vm";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 const editorPath = path.join(repoRoot, "src", "components", "admin", "PageBuilderEditor.tsx");
+const builderPagePath = path.join(repoRoot, "src", "app", "admin", "builder", "page.tsx");
 
 function loadEditorExports() {
   const source = fs.readFileSync(editorPath, "utf8");
@@ -110,4 +111,19 @@ test("builder save preparation keeps empty text fields and blocks invalid hrefs"
 
   assert.equal(invalid.ok, false);
   assert.equal(invalid.blockId, "bad-button");
+});
+
+test("admin builder page uses the approved server session guard", () => {
+  const source = fs.readFileSync(builderPagePath, "utf8");
+
+  assert.equal(source.includes('"use client"'), false);
+  assert.match(source, /from "node:crypto"/);
+  assert.match(source, /timingSafeEqual/);
+  assert.match(source, /from "next\/headers"/);
+  assert.match(source, /from "next\/navigation"/);
+  assert.match(source, /chain-radar-admin-session/);
+  assert.match(source, /isValidAdminSession/);
+  assert.match(source, /redirect\("\/admin\/login"\)/);
+  assert.match(source, /PageBuilderEditor/);
+  assert.equal(source.includes('ADMIN_SESSION_VALUE = "active"'), false);
 });
