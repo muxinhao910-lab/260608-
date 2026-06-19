@@ -83,6 +83,9 @@ test("home editor normalizes unsafe button hrefs from untrusted localStorage", (
     "data:text/html,<h1>x</h1>",
     "vbscript:msgbox(1)",
     "//example.com/path",
+    "/\\evil",
+    "\\\\example.com\\share",
+    "http:\\\\example.com\\x",
     "/safe\u0000path"
   ];
 

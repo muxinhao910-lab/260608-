@@ -420,7 +420,7 @@ function normalizeHomeEditorHref(value: unknown) {
   }
 
   const href = value.trim();
-  if (!href || /[\u0000-\u001f\u007f]/.test(href) || href.startsWith("//")) {
+  if (!href || /[\u0000-\u001f\u007f]/.test(href) || href.includes("\\") || href.startsWith("//")) {
     return "/";
   }
 
