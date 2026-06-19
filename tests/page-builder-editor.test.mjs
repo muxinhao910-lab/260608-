@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHmac } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
@@ -77,6 +78,78 @@ function loadEditorExports() {
   return module.exports;
 }
 
+function createTestAdminSession(secret) {
+  const issuedAt = String(Date.now());
+  const nonce = "test-nonce";
+  const payload = `${issuedAt}.${nonce}`;
+  const signature = createHmac("sha256", secret).update(payload).digest("base64url");
+  return `${payload}.${signature}`;
+}
+
+function loadBuilderPage({ sessionValue, env = {} } = {}) {
+  const source = fs.readFileSync(builderPagePath, "utf8");
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: {
+      esModuleInterop: true,
+      jsx: ts.JsxEmit.ReactJSX,
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022
+    },
+    fileName: builderPagePath
+  });
+
+  const module = { exports: {} };
+  const sandbox = {
+    Buffer,
+    exports: module.exports,
+    module,
+    process: { env },
+    require: (id) => {
+      if (id === "node:crypto") {
+        return { createHmac, timingSafeEqual: (left, right) => left.equals(right) };
+      }
+      if (id === "next/headers") {
+        return {
+          async cookies() {
+            return {
+              get(name) {
+                return name === "chain-radar-admin-session" && sessionValue ? { value: sessionValue } : undefined;
+              }
+            };
+          }
+        };
+      }
+      if (id === "next/navigation") {
+        return {
+          redirect(target) {
+            const error = new Error(`redirect:${target}`);
+            error.target = target;
+            throw error;
+          }
+        };
+      }
+      if (id === "@/components/admin/PageBuilderEditor") {
+        return {
+          PageBuilderEditor() {
+            return "page-builder-editor-rendered";
+          }
+        };
+      }
+      if (id === "react/jsx-runtime") {
+        return {
+          jsx(type) {
+            return { type };
+          }
+        };
+      }
+      throw new Error(`Unexpected builder page import: ${id}`);
+    }
+  };
+
+  vm.runInNewContext(compiled.outputText, sandbox, { filename: builderPagePath });
+  return module.exports.default;
+}
+
 test("builder URL validation rejects protocol-relative and unsafe href input", () => {
   const { validateBuilderHrefInput } = loadEditorExports();
 
@@ -113,17 +186,20 @@ test("builder save preparation keeps empty text fields and blocks invalid hrefs"
   assert.equal(invalid.blockId, "bad-button");
 });
 
-test("admin builder page uses the approved server session guard", () => {
-  const source = fs.readFileSync(builderPagePath, "utf8");
+test("admin builder page redirects without the signed server session cookie", async () => {
+  const AdminBuilderPage = loadBuilderPage({ env: { CHAIN_RADAR_ADMIN_SESSION_SECRET: "test-secret" } });
 
-  assert.equal(source.includes('"use client"'), false);
-  assert.match(source, /from "node:crypto"/);
-  assert.match(source, /timingSafeEqual/);
-  assert.match(source, /from "next\/headers"/);
-  assert.match(source, /from "next\/navigation"/);
-  assert.match(source, /chain-radar-admin-session/);
-  assert.match(source, /isValidAdminSession/);
-  assert.match(source, /redirect\("\/admin\/login"\)/);
-  assert.match(source, /PageBuilderEditor/);
-  assert.equal(source.includes('ADMIN_SESSION_VALUE = "active"'), false);
+  await assert.rejects(() => AdminBuilderPage(), { target: "/admin/login" });
+});
+
+test("admin builder page renders only with a valid signed server session cookie", async () => {
+  const secret = "test-secret";
+  const AdminBuilderPage = loadBuilderPage({
+    env: { CHAIN_RADAR_ADMIN_SESSION_SECRET: secret },
+    sessionValue: createTestAdminSession(secret)
+  });
+
+  const rendered = await AdminBuilderPage();
+
+  assert.equal(rendered.type(), "page-builder-editor-rendered");
 });
