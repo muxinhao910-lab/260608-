@@ -103,8 +103,34 @@ export type PageBlock =
 
 export type PageBlockType = PageBlock["type"];
 
+export type HomeEditorPageType = "flow" | "free";
+
+export type HomeEditorPosition = {
+  x: number;
+  y: number;
+};
+
+export type HomeEditorTextAlign = "left" | "center" | "right";
+export type HomeEditorTextSize = "large" | "medium" | "small";
+export type HomeEditorBackground = "transparent" | "white" | "black" | "orange";
+
+export type HomeEditorModule =
+  | { id: string; type: "text"; text: string; align: HomeEditorTextAlign; size: HomeEditorTextSize; background: HomeEditorBackground; position: HomeEditorPosition }
+  | { id: string; type: "button"; label: string; href: string; position: HomeEditorPosition }
+  | { id: string; type: "link"; text: string; href: string; position: HomeEditorPosition }
+  | { id: string; type: "decoration"; label: string; position: HomeEditorPosition };
+
+export type HomeEditorModuleType = HomeEditorModule["type"];
+
+export type HomeEditorState = {
+  pageId: "home";
+  pageType: HomeEditorPageType;
+  modules: HomeEditorModule[];
+};
+
 const STORE_KEY = "chain-radar-cms-v1";
 const PAGE_BUILDER_BLOCKS_KEY = "chain-radar-page-builder-blocks-v1";
+const HOME_EDITOR_STATE_KEY = "chain-radar-home-editor-state-v1";
 
 const robotSectorId = "robotics";
 
@@ -385,6 +411,171 @@ export function createPageBlock(type: PageBlockType): PageBlock {
       return { id, type, title: "板块入口卡片", description: "点击进入对应产业板块。", href: "/sector/robotics" };
     case "divider":
       return { id, type };
+  }
+}
+
+export const defaultHomeEditorState: HomeEditorState = {
+  pageId: "home",
+  pageType: "flow",
+  modules: []
+};
+
+function cloneDefaultHomeEditorState(): HomeEditorState {
+  return JSON.parse(JSON.stringify(defaultHomeEditorState)) as HomeEditorState;
+}
+
+function normalizeHomeEditorHref(value: unknown) {
+  if (typeof value !== "string") {
+    return "/";
+  }
+
+  const href = value.trim();
+  if (!href || /[\u0000-\u001f\u007f]/.test(href) || href.includes("\\") || href.startsWith("//")) {
+    return "/";
+  }
+
+  if (href.startsWith("/")) {
+    return href;
+  }
+
+  try {
+    const parsed = new URL(href);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? href : "/";
+  } catch {
+    return "/";
+  }
+}
+
+function normalizeHomeEditorPosition(value: unknown): HomeEditorPosition {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { x: 0, y: 0 };
+  }
+
+  const position = value as Partial<HomeEditorPosition>;
+  return {
+    x: typeof position.x === "number" && Number.isFinite(position.x) ? position.x : 0,
+    y: typeof position.y === "number" && Number.isFinite(position.y) ? position.y : 0
+  };
+}
+
+function normalizeHomeEditorTextAlign(value: unknown): HomeEditorTextAlign {
+  return value === "center" || value === "right" ? value : "left";
+}
+
+function normalizeHomeEditorTextSize(value: unknown): HomeEditorTextSize {
+  return value === "large" || value === "small" ? value : "medium";
+}
+
+function normalizeHomeEditorBackground(value: unknown): HomeEditorBackground {
+  return value === "white" || value === "black" || value === "orange" ? value : "transparent";
+}
+
+function normalizeHomeEditorModule(value: unknown): HomeEditorModule | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const module = value as Record<string, unknown>;
+  if (typeof module.id !== "string" || typeof module.type !== "string") {
+    return null;
+  }
+
+  switch (module.type) {
+    case "text":
+      return {
+        id: module.id,
+        type: "text",
+        text: typeof module.text === "string" ? module.text : "新文字模块",
+        align: normalizeHomeEditorTextAlign(module.align),
+        size: normalizeHomeEditorTextSize(module.size),
+        background: normalizeHomeEditorBackground(module.background),
+        position: normalizeHomeEditorPosition(module.position)
+      };
+    case "button":
+      return {
+        id: module.id,
+        type: "button",
+        label: typeof module.label === "string" ? module.label : typeof module.text === "string" ? module.text : "按钮",
+        href: normalizeHomeEditorHref(module.href),
+        position: normalizeHomeEditorPosition(module.position)
+      };
+    case "link":
+      return {
+        id: module.id,
+        type: "link",
+        text: typeof module.text === "string" ? module.text : typeof module.label === "string" ? module.label : "文字链接",
+        href: normalizeHomeEditorHref(module.href),
+        position: normalizeHomeEditorPosition(module.position)
+      };
+    case "decoration":
+      return {
+        id: module.id,
+        type: "decoration",
+        label: typeof module.label === "string" ? module.label : "装饰块",
+        position: normalizeHomeEditorPosition(module.position)
+      };
+    default:
+      return null;
+  }
+}
+
+export function normalizeHomeEditorState(value: unknown): HomeEditorState {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return cloneDefaultHomeEditorState();
+  }
+
+  const state = value as Partial<HomeEditorState>;
+  const modules = Array.isArray(state.modules)
+    ? state.modules.map(normalizeHomeEditorModule).filter((module): module is HomeEditorModule => Boolean(module))
+    : [];
+
+  return {
+    pageId: "home",
+    pageType: state.pageType === "free" ? "free" : "flow",
+    modules
+  };
+}
+
+export function getHomeEditorState(): HomeEditorState {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return cloneDefaultHomeEditorState();
+  }
+
+  try {
+    const raw = window.localStorage.getItem(HOME_EDITOR_STATE_KEY);
+    if (!raw) {
+      return cloneDefaultHomeEditorState();
+    }
+    return normalizeHomeEditorState(JSON.parse(raw));
+  } catch {
+    return cloneDefaultHomeEditorState();
+  }
+}
+
+export function saveHomeEditorState(state: HomeEditorState) {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return false;
+  }
+
+  try {
+    window.localStorage.setItem(HOME_EDITOR_STATE_KEY, JSON.stringify(normalizeHomeEditorState(state)));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function createHomeEditorModule(type: HomeEditorModuleType): HomeEditorModule {
+  const id = createId(`home-${type}`);
+  switch (type) {
+    case "text":
+      return { id, type, text: "新文字模块", align: "left", size: "medium", background: "transparent", position: { x: 0, y: 0 } };
+    case "button":
+      return { id, type, label: "新按钮", href: "/", position: { x: 0, y: 0 } };
+    case "link":
+      return { id, type, text: "文字链接", href: "/sector/robotics", position: { x: 0, y: 0 } };
+    case "decoration":
+      return { id, type, label: "装饰块", position: { x: 0, y: 0 } };
   }
 }
 

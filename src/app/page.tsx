@@ -6,6 +6,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { type SectorRecord, useSiteDataStore } from "@/lib/cms-store";
+import { HomeEditShell } from "@/components/site-editor/HomeEditShell";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -197,6 +198,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <HomeEditShell />
     </main>
   );
 }
