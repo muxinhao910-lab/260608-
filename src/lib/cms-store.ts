@@ -105,10 +105,20 @@ export type PageBlockType = PageBlock["type"];
 
 export type HomeEditorPageType = "flow" | "free";
 
+export type HomeEditorPosition = {
+  x: number;
+  y: number;
+};
+
+export type HomeEditorTextAlign = "left" | "center" | "right";
+export type HomeEditorTextSize = "large" | "medium" | "small";
+export type HomeEditorBackground = "transparent" | "white" | "black" | "orange";
+
 export type HomeEditorModule =
-  | { id: string; type: "text"; text: string }
-  | { id: string; type: "button"; text: string; href: string }
-  | { id: string; type: "decoration"; label: string };
+  | { id: string; type: "text"; text: string; align: HomeEditorTextAlign; size: HomeEditorTextSize; background: HomeEditorBackground; position: HomeEditorPosition }
+  | { id: string; type: "button"; label: string; href: string; position: HomeEditorPosition }
+  | { id: string; type: "link"; text: string; href: string; position: HomeEditorPosition }
+  | { id: string; type: "decoration"; label: string; position: HomeEditorPosition };
 
 export type HomeEditorModuleType = HomeEditorModule["type"];
 
@@ -436,28 +446,74 @@ function normalizeHomeEditorHref(value: unknown) {
   }
 }
 
+function normalizeHomeEditorPosition(value: unknown): HomeEditorPosition {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { x: 0, y: 0 };
+  }
+
+  const position = value as Partial<HomeEditorPosition>;
+  return {
+    x: typeof position.x === "number" && Number.isFinite(position.x) ? position.x : 0,
+    y: typeof position.y === "number" && Number.isFinite(position.y) ? position.y : 0
+  };
+}
+
+function normalizeHomeEditorTextAlign(value: unknown): HomeEditorTextAlign {
+  return value === "center" || value === "right" ? value : "left";
+}
+
+function normalizeHomeEditorTextSize(value: unknown): HomeEditorTextSize {
+  return value === "large" || value === "small" ? value : "medium";
+}
+
+function normalizeHomeEditorBackground(value: unknown): HomeEditorBackground {
+  return value === "white" || value === "black" || value === "orange" ? value : "transparent";
+}
+
 function normalizeHomeEditorModule(value: unknown): HomeEditorModule | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return null;
   }
 
-  const module = value as Partial<HomeEditorModule>;
+  const module = value as Record<string, unknown>;
   if (typeof module.id !== "string" || typeof module.type !== "string") {
     return null;
   }
 
   switch (module.type) {
     case "text":
-      return { id: module.id, type: "text", text: typeof module.text === "string" ? module.text : "新文字模块" };
+      return {
+        id: module.id,
+        type: "text",
+        text: typeof module.text === "string" ? module.text : "新文字模块",
+        align: normalizeHomeEditorTextAlign(module.align),
+        size: normalizeHomeEditorTextSize(module.size),
+        background: normalizeHomeEditorBackground(module.background),
+        position: normalizeHomeEditorPosition(module.position)
+      };
     case "button":
       return {
         id: module.id,
         type: "button",
-        text: typeof module.text === "string" ? module.text : "按钮",
-        href: normalizeHomeEditorHref(module.href)
+        label: typeof module.label === "string" ? module.label : typeof module.text === "string" ? module.text : "按钮",
+        href: normalizeHomeEditorHref(module.href),
+        position: normalizeHomeEditorPosition(module.position)
+      };
+    case "link":
+      return {
+        id: module.id,
+        type: "link",
+        text: typeof module.text === "string" ? module.text : typeof module.label === "string" ? module.label : "文字链接",
+        href: normalizeHomeEditorHref(module.href),
+        position: normalizeHomeEditorPosition(module.position)
       };
     case "decoration":
-      return { id: module.id, type: "decoration", label: typeof module.label === "string" ? module.label : "装饰块" };
+      return {
+        id: module.id,
+        type: "decoration",
+        label: typeof module.label === "string" ? module.label : "装饰块",
+        position: normalizeHomeEditorPosition(module.position)
+      };
     default:
       return null;
   }
@@ -513,11 +569,13 @@ export function createHomeEditorModule(type: HomeEditorModuleType): HomeEditorMo
   const id = createId(`home-${type}`);
   switch (type) {
     case "text":
-      return { id, type, text: "新文字模块" };
+      return { id, type, text: "新文字模块", align: "left", size: "medium", background: "transparent", position: { x: 0, y: 0 } };
     case "button":
-      return { id, type, text: "新按钮", href: "/" };
+      return { id, type, label: "新按钮", href: "/", position: { x: 0, y: 0 } };
+    case "link":
+      return { id, type, text: "文字链接", href: "/sector/robotics", position: { x: 0, y: 0 } };
     case "decoration":
-      return { id, type, label: "装饰块" };
+      return { id, type, label: "装饰块", position: { x: 0, y: 0 } };
   }
 }
 
